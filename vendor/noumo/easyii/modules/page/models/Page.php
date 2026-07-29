@@ -40,4 +40,17 @@ class Page extends \yii\easyii\components\ActiveRecord
       'seoBehavior' => SeoBehavior::class,
     ];
   }
+
+  /**
+   * Получить контакты из field1
+   * @return array
+   */
+  public function getContacts()
+  {
+    if (!empty($this->field1)) {
+      $contacts = json_decode($this->field1, true);
+      return is_array($contacts) ? $contacts : [];
+    }
+    return [];
+  }
 }

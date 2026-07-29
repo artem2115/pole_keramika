@@ -7,6 +7,16 @@ use yii\easyii\widgets\Redactor;
 use yii\easyii\widgets\SeoForm;
 
 ?>
+<?php if ($model->slug === 'page-contacts'): ?>
+  <ul class="nav nav-pills">
+    <li>
+      <?= Html::a(
+        '<i class="glyphicon glyphicon-earphone"></i> Редактировать контакты',
+        ['contacts', 'id' => $model->primaryKey],
+      ) ?></li>
+  </ul>
+<br>
+<?php endif; ?>
 <?php $form = ActiveForm::begin([
   'enableAjaxValidation' => true,
   'options' => ['class' => 'model-form']
@@ -28,3 +38,4 @@ use yii\easyii\widgets\SeoForm;
 
 <?= Html::submitButton(Yii::t('easyii', 'Save'), ['class' => 'btn btn-primary']) ?>
 <?php ActiveForm::end(); ?>
+

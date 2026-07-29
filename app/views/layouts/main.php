@@ -61,7 +61,7 @@ $isHome = Yii::$app->controller->id === Yii::$app->defaultRoute && Yii::$app->co
   <div class="c">
     <div class="ft">
       <div class="ft-1">
-        <div class="f-logo"><img src="/i/logo.png" alt="Поле Керамика"></div>
+        <div class="f-logo"><img src="/i/logo.webp" alt="Поле Керамика"></div>
         <div class="f-tel"><a href="tel:+79248180034">+7 924 818-00-34</a></div>
         <button data-modal="order_call">Заказать звонок</button>
         <div class="f-email"><a href="mailto:info@mail.ru">info@mail.ru</a></div>
@@ -105,7 +105,7 @@ $isHome = Yii::$app->controller->id === Yii::$app->defaultRoute && Yii::$app->co
         <a href="#">Политика конфиденциальности</a>
       </div>
       <div class="fb-r">
-        <a href="#"><img src="/i/bigart.png" alt="Создание сайта - Bigart"></a>
+        <a href="#"><img src="/i/bigart.webp" alt="Создание сайта - Bigart"></a>
       </div>
     </div>
   </div>

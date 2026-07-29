@@ -4,6 +4,7 @@ namespace yii\easyii\modules\page\controllers;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\easyii\components\Controller;
+use yii\easyii\modules\page\models\ContactForm;
 use yii\easyii\modules\page\models\Page;
 use yii\widgets\ActiveForm;
 
@@ -83,5 +84,72 @@ class AController extends Controller
       $this->error = Yii::t('easyii', 'Not found');
     }
     return $this->formatResponse(Yii::t('easyii/page', 'Page deleted'));
+  }
+
+  public function actionContacts($id)
+  {
+    $page = Page::findOne($id);
+
+    if($page === null){
+      $this->flash('error', Yii::t('easyii', 'Not found'));
+      return $this->redirect(['/admin/' . $this->module->id]);
+    }
+
+    $contactsData = $page->getContacts();
+
+    $models = [];
+    foreach ($contactsData as $contact) {
+      $model = new ContactForm();
+      $model->attributes = $contact;
+      // Значения по умолчанию для старых записей
+      if (empty($model->width)) $model->width = 20;
+      if (empty($model->height)) $model->height = 20;
+      $models[] = $model;
+    }
+
+    if (empty($models)) {
+      $models[] = new ContactForm();
+    }
+
+    if (Yii::$app->request->post()) {
+      $postData = Yii::$app->request->post('ContactForm', []);
+
+      $validContacts = [];
+      $hasErrors = false;
+
+      foreach ($postData as $contactData) {
+        $contactModel = new ContactForm();
+        $contactModel->load(['ContactForm' => $contactData], 'ContactForm');
+
+        if ($contactModel->validate()) {
+          $validContacts[] = [
+            'icon' => $contactModel->icon,
+            'width' => (int)$contactModel->width,
+            'height' => (int)$contactModel->height,
+            'link' => $contactModel->link,
+            'title' => $contactModel->title,
+            'subtitle' => $contactModel->subtitle,
+            'description' => $contactModel->description,
+          ];
+        } else {
+          $hasErrors = true;
+          $this->flash('error', Yii::t('easyii', 'Validation error'));
+          break;
+        }
+      }
+
+      if (!$hasErrors) {
+        $page->field1 = json_encode($validContacts, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        if ($page->save(false)) {
+          $this->flash('success', Yii::t('easyii/page', 'Contacts saved'));
+          return $this->refresh();
+        }
+      }
+    }
+
+    return $this->render('contacts', [
+      'page' => $page,
+      'models' => $models,
+    ]);
   }
 }

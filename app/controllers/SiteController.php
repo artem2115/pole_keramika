@@ -5,6 +5,7 @@ namespace app\controllers;
 use Yii;
 use yii\easyii\helpers\MetaWidget;
 use yii\easyii\modules\page\api\Page;
+use yii\easyii\modules\page\models\Page as PageModel;
 use yii\web\Controller;
 
 class SiteController extends Controller
@@ -35,9 +36,11 @@ class SiteController extends Controller
   {
     $page = Page::get('page-contacts');
     MetaWidget::widget(['model' => $page]);
+    $page_c = PageModel::findOne(['slug' => 'page-contacts']);
 
     return $this->render('contacts', [
-      'page' => $page
+      'page' => $page,
+      'contacts' => $page_c ? $page_c->getContacts() : []
     ]);
   }
 }
