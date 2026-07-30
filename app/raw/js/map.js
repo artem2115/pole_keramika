@@ -3,6 +3,7 @@
 
   var mapInstance = null;
   var placemarks = [];
+  var isMapReady = false;
 
   function initMap() {
     var $mapContainer = $('#yandex-map');
@@ -74,7 +75,6 @@
       iconImageOffset: [-20, -40]
     };
 
-    // Создаем метки и сохраняем их
     for (var i = 0; i < mapCoords.length; i++) {
       var c = mapCoords[i];
       var placemark = new ymaps.Placemark(
@@ -85,7 +85,6 @@
         placemarkOptions
       );
 
-      // Сохраняем связь между меткой и элементом списка
       placemark._index = i;
       placemark._coords = [c.lat, c.lon];
 
@@ -96,6 +95,17 @@
     if (mapCoords.length > 1) {
       mapInstance.setBounds(mapInstance.geoObjects.getBounds());
     }
+
+    // Ждем полной загрузки карты
+    mapInstance.events.once('actionend', function() {
+      isMapReady = true;
+      console.log('Карта полностью загружена');
+    });
+
+    // Также помечаем как готовую через таймаут
+    setTimeout(function() {
+      isMapReady = true;
+    }, 1000);
 
     setTimeout(function() {
       mapInstance.container.fitToViewport();
@@ -113,17 +123,32 @@
         return;
       }
 
-      // Удаляем активный класс у всех элементов
-      $('.ul-5 li').removeClass('active');
-      $this.addClass('active');
+      // Если карта еще не готова, ждем
+      if (!isMapReady) {
+        var waitInterval = setInterval(function() {
+          if (isMapReady && mapInstance) {
+            clearInterval(waitInterval);
+            centerMapOnPoint($this, lat, lng);
+          }
+        }, 100);
+        return;
+      }
 
-      // Центрируем карту на метке
-      mapInstance.setCenter([lat, lng], 16, {
-        duration: 500,
-        checkZoomRange: true
-      });
+      centerMapOnPoint($this, lat, lng);
+    });
+  }
 
-      // Открываем балун у соответствующей метки
+  function centerMapOnPoint($item, lat, lng) {
+    $('.ul-5 li').removeClass('active');
+    $item.addClass('active');
+
+    // Используем panTo для более плавного перемещения
+    mapInstance.panTo([lat, lng], {
+      zoom: 16,
+      duration: 500
+    });
+
+    setTimeout(function() {
       for (var j = 0; j < placemarks.length; j++) {
         var coords = placemarks[j].geometry.getCoordinates();
         if (coords[0] === lat && coords[1] === lng) {
@@ -131,14 +156,14 @@
           break;
         }
       }
+    }, 400);
 
-      // Плавный скролл к карте
+    setTimeout(function() {
       $('html, body').animate({
         scrollTop: $('#yandex-map').offset().top - 100
       }, 400);
-    });
+    }, 300);
   }
-
   function checkYmaps() {
     if (typeof ymaps !== 'undefined' && ymaps.Map && typeof ymaps.ready === 'function') {
       ymaps.ready(initMap);
