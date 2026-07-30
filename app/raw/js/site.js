@@ -46,7 +46,6 @@
 
 // Основной код
 $(function(){
-  'use strict';
 
   const $body = $('body');
   const header = $("header");
@@ -167,7 +166,6 @@ $(function(){
         { breakpoint: 1691, settings: {slidesToShow: 5} },
         { breakpoint: 1481, settings: {slidesToShow: 4} },
         { breakpoint: 1245, settings: {slidesToShow: 3} },
-        //{ breakpoint: 985, settings: {slidesToShow: 2} },
         { breakpoint: 741, settings: { centerMode: true,centerPadding: '30px', slidesToShow: 2 } },
         { breakpoint: 620, settings: {centerMode: true,centerPadding: '50px', slidesToShow: 1 } },
         { breakpoint: 350, settings: {centerMode: true,centerPadding: '10px', slidesToShow: 1 } }
@@ -242,7 +240,6 @@ $(function(){
     });
   }
 
-  // Плавающий фон меню
   const $menu = $('.htc nav > ul');
 
   if ($menu.length) {
@@ -369,7 +366,6 @@ $(function(){
     }
   });
 
-  // Инициализация i-thg
   $('.i-thg').each(function() {
     const $thg = $(this);
     const count = $thg.find('img').length;
@@ -420,7 +416,6 @@ $(function(){
         }
       });
 
-      // Закрытие по крестику
       $(document).on('click', '.f-close', function() {
         $body.removeClass('f-open');
         $('.fs-1').removeClass('active');

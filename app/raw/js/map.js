@@ -1,32 +1,39 @@
-(function() {
+(function(){
   'use strict';
 
   var mapInstance = null;
   var placemarks = [];
   var isMapReady = false;
 
-  function initMap() {
+  function initMap(){
     var $mapContainer = $('#yandex-map');
-    if (!$mapContainer.length) {
+    if(!$mapContainer.length){
       return;
     }
 
-    if ($mapContainer.data('initialized')) {
+    if($mapContainer.data('initialized')){
       return;
     }
 
-    var $mapItems = $('.ul-5 li[data-lat][data-lng]');
-    if (!$mapItems.length) {
+    var $mapItems = $('.ul-5 li[data-coords]');
+    if(!$mapItems.length){
       $mapContainer.html('<div style="background:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100%;font-family:sans-serif;color:#999;">Нет адресов для отображения на карте</div>');
       return;
     }
 
     var mapCoords = [];
-    $mapItems.each(function(index) {
+    $mapItems.each(function(index){
       var $item = $(this);
-      var lat = parseFloat($item.data('lat'));
-      var lng = parseFloat($item.data('lng'));
-      if (lat && lng) {
+      var coordsStr = $item.data('coords');
+      if(!coordsStr) return;
+
+      var coords = coordsStr.split(',');
+      if(coords.length !== 2) return;
+
+      var lat = parseFloat(coords[0].trim());
+      var lng = parseFloat(coords[1].trim());
+
+      if(lat && lng){
         mapCoords.push({
           lat: lat,
           lon: lng,
@@ -39,7 +46,7 @@
       }
     });
 
-    if (!mapCoords.length) {
+    if(!mapCoords.length){
       $mapContainer.html('<div style="background:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100%;font-family:sans-serif;color:#999;">Нет координат для отображения на карте</div>');
       return;
     }
@@ -75,7 +82,7 @@
       iconImageOffset: [-20, -40]
     };
 
-    for (var i = 0; i < mapCoords.length; i++) {
+    for(var i = 0; i < mapCoords.length; i++){
       var c = mapCoords[i];
       var placemark = new ymaps.Placemark(
         [c.lat, c.lon],
@@ -92,41 +99,40 @@
       placemarks.push(placemark);
     }
 
-    if (mapCoords.length > 1) {
-      mapInstance.setBounds(mapInstance.geoObjects.getBounds());
+    if(mapCoords.length > 1){
+      mapInstance.setBounds(mapInstance.geoObjects.getBounds(), {
+        checkZoomRange: true
+      });
     }
 
-    // Ждем полной загрузки карты
-    mapInstance.events.once('actionend', function() {
+    mapInstance.events.once('actionend', function(){
       isMapReady = true;
-      console.log('Карта полностью загружена');
     });
 
-    // Также помечаем как готовую через таймаут
-    setTimeout(function() {
+    setTimeout(function(){
       isMapReady = true;
     }, 1000);
 
-    setTimeout(function() {
-      mapInstance.container.fitToViewport();
-    }, 300);
-
     $mapContainer.data('initialized', true);
 
-    // ====== ОБРАБОТЧИК КЛИКА ПО АДРЕСАМ ======
-    $('.ul-5 li[data-lat][data-lng]').on('click', function() {
+    $('.ul-5 li[data-coords]').on('click', function(){
       var $this = $(this);
-      var lat = parseFloat($this.data('lat'));
-      var lng = parseFloat($this.data('lng'));
+      var coordsStr = $this.data('coords');
+      if(!coordsStr) return;
 
-      if (!lat || !lng || !mapInstance) {
+      var coords = coordsStr.split(',');
+      if(coords.length !== 2) return;
+
+      var lat = parseFloat(coords[0].trim());
+      var lng = parseFloat(coords[1].trim());
+
+      if(!lat || !lng || !mapInstance){
         return;
       }
 
-      // Если карта еще не готова, ждем
-      if (!isMapReady) {
-        var waitInterval = setInterval(function() {
-          if (isMapReady && mapInstance) {
+      if(!isMapReady){
+        var waitInterval = setInterval(function(){
+          if(isMapReady && mapInstance){
             clearInterval(waitInterval);
             centerMapOnPoint($this, lat, lng);
           }
@@ -138,58 +144,55 @@
     });
   }
 
-  function centerMapOnPoint($item, lat, lng) {
+  function centerMapOnPoint($item, lat, lng){
     $('.ul-5 li').removeClass('active');
     $item.addClass('active');
 
-    // Используем panTo для более плавного перемещения
-    mapInstance.panTo([lat, lng], {
-      zoom: 16,
-      duration: 500
-    });
+    mapInstance.setCenter([lat, lng], 16);
 
-    setTimeout(function() {
-      for (var j = 0; j < placemarks.length; j++) {
+    setTimeout(function(){
+      for(var j = 0; j < placemarks.length; j++){
         var coords = placemarks[j].geometry.getCoordinates();
-        if (coords[0] === lat && coords[1] === lng) {
+        if(coords[0] === lat && coords[1] === lng){
           placemarks[j].balloon.open();
           break;
         }
       }
-    }, 400);
+    }, 300);
 
-    setTimeout(function() {
+    setTimeout(function(){
       $('html, body').animate({
         scrollTop: $('#yandex-map').offset().top - 100
       }, 400);
     }, 300);
   }
-  function checkYmaps() {
-    if (typeof ymaps !== 'undefined' && ymaps.Map && typeof ymaps.ready === 'function') {
+
+  function checkYmaps(){
+    if(typeof ymaps !== 'undefined' && ymaps.Map && typeof ymaps.ready === 'function'){
       ymaps.ready(initMap);
       return true;
     }
     return false;
   }
 
-  if (checkYmaps()) {
+  if(checkYmaps()){
     return;
   }
 
-  var checkInterval = setInterval(function() {
-    if (checkYmaps()) {
+  var checkInterval = setInterval(function(){
+    if(checkYmaps()){
       clearInterval(checkInterval);
     }
   }, 300);
 
-  setTimeout(function() {
-    if (!document.querySelector('#yandex-map ymaps')) {
+  setTimeout(function(){
+    if(!document.querySelector('#yandex-map ymaps')){
       clearInterval(checkInterval);
       var $mapContainer = $('#yandex-map');
-      if ($mapContainer.length) {
+      if($mapContainer.length){
         $mapContainer.html('<div style="background:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100%;font-family:sans-serif;color:#999;">Карта временно недоступна</div>');
       }
     }
-  }, 10000);
+  }, 1000);
 
 })();

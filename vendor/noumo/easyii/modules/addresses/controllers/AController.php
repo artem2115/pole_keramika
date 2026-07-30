@@ -48,14 +48,6 @@ class AController extends Controller
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         return ActiveForm::validate($model);
       } else {
-        if(isset($_FILES) && $this->module->settings['enableThumb']){
-          $model->image = UploadedFile::getInstance($model, 'image');
-          if($model->image && $model->validate(['image'])){
-            $model->image = Image::upload($model->image, 'addresses');
-          } else {
-            $model->image = '';
-          }
-        }
         if($model->save()){
           $this->flash('success', Yii::t('easyii/addresses', 'Addresses created'));
           return $this->redirect(['/admin/' . $this->module->id]);
@@ -85,15 +77,6 @@ class AController extends Controller
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         return ActiveForm::validate($model);
       } else {
-        if(isset($_FILES) && $this->module->settings['enableThumb']){
-          $model->image = UploadedFile::getInstance($model, 'image');
-          if($model->image && $model->validate(['image'])){
-            $model->image = Image::upload($model->image, 'addresses');
-          } else {
-            $model->image = $model->oldAttributes['image'];
-          }
-        }
-
         if($model->save()){
           $this->flash('success', Yii::t('easyii/addresses', 'Addresses updated'));
         } else {
@@ -108,7 +91,7 @@ class AController extends Controller
     }
   }
 
-  public function actionPhotos($id)
+  /*public function actionPhotos($id)
   {
     if(!($model = Addresses::findOne($id))){
       return $this->redirect(['/admin/' . $this->module->id]);
@@ -117,7 +100,7 @@ class AController extends Controller
     return $this->render('photos', [
       'model' => $model,
     ]);
-  }
+  }*/
 
   public function actionDelete($id)
   {
@@ -127,24 +110,6 @@ class AController extends Controller
       $this->error = Yii::t('easyii', 'Not found');
     }
     return $this->formatResponse(Yii::t('easyii/addresses', 'Addresses deleted'));
-  }
-
-  public function actionClearImage($id)
-  {
-    $model = Addresses::findOne($id);
-
-    if($model === null){
-      $this->flash('error', Yii::t('easyii', 'Not found'));
-    } else {
-      $model->image = '';
-      if($model->update()){
-        @unlink(Yii::getAlias('@webroot') . $model->image);
-        $this->flash('success', Yii::t('easyii', 'Image cleared'));
-      } else {
-        $this->flash('error', Yii::t('easyii', 'Update error. {0}', $model->formatErrors()));
-      }
-    }
-    return $this->back();
   }
 
   public function actionUp($id)

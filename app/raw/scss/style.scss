@@ -493,10 +493,23 @@ input{color:$colorGray900}
   li{display:inline-block;border:1px solid $colorWhite;padding:10px 14px 9px;margin:8px 8px 8px 0;border-radius:30px}
 }
 .ul-5{@extend %flex_sb;gap:16px;font-weight:$fwMedium-500;padding:24px 0;line-height:1.2;flex-wrap:wrap;
-  li{@extend %brad-4;flex:1 1 240px;background-color:$colorGray25;padding:11px;}
+  li{@extend %brad-4,%transition-02;flex:1 1 240px;background-color:$colorGray25;padding:11px;cursor: pointer;
+    &:hover{border-color: #99292D;box-shadow: 0 2px 8px rgba(153, 41, 45, 0.15);
+    }
+    &.active {
+      background-color: #FFF4F2;
+      box-shadow: 0 2px 12px rgba(153, 41, 45, 0.2);
+      position: relative;
+    }
+  }
   b{display:block;font-size:rem(20px);font-weight:$fwSemiBold-600;padding-bottom:12px}
-  span{display:block}
+  i{display:block;font-style:normal;padding-bottom:8px}
+  span{display:block;
+    a{@extend %a-td-nu;color:$colorGray900}
+  }
 }
+
+
 
 .b4{@extend %flex_sb;gap:8px;margin:25px 0;
   &.b4-1{@extend %brad-8;background-color:$colorBrand25;padding:16px}
@@ -882,6 +895,8 @@ input[type=checkbox] + var:hover, label:hover input[type=checkbox] + var{border-
     //&:not(.active):hover a{color:$colorGray900;}
   }
 }
+
+.map{@extend %brad-8;min-height: 400px;background-color:$colorGray100}
 /***************footer****************/
 footer{padding:100px 0;border-top:1px solid $colorGray200}
 .ft{@extend %flex_sb;gap:5%}

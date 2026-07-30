@@ -7,6 +7,7 @@ use yii\easyii\helpers\MetaWidget;
 use yii\easyii\modules\page\api\Page;
 use yii\easyii\modules\page\models\Page as PageModel;
 use yii\web\Controller;
+use yii\easyii\modules\addresses\models\Addresses;
 
 class SiteController extends Controller
 {
@@ -40,7 +41,8 @@ class SiteController extends Controller
 
     return $this->render('contacts', [
       'page' => $page,
-      'contacts' => $page_c ? $page_c->getContacts() : []
+      'contacts' => $page_c ? $page_c->getContacts() : [],
+      'addresses' => Addresses::find()->where(['status' => Addresses::STATUS_ON])->all()
     ]);
   }
 }

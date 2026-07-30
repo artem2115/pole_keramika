@@ -1,6 +1,13 @@
 <?php
 $this->title = $page->seo('title', $page->model->title);
 ?>
+  <div class="bc">
+    <ul>
+      <li><a href="/">Главная</a></li>
+      <li><?= $page->model->title ?></li>
+    </ul>
+  </div>
+  <h1><?= $page->seo('h1', $page->model->title) ?></h1>
 <?php if(!empty($contacts)): ?>
   <ul class="ul-8">
     <?php foreach ($contacts as $contact): ?>
@@ -20,25 +27,16 @@ $this->title = $page->seo('title', $page->model->title);
   </ul>
 <?php endif; ?>
 
-
-<h3 class="h1">Адреса магазинов</h3>
-<ul class="ul-5">
-  <li>
-    <b>Вокзальная ул., 3А</b>
-    <span>+7 (924) 818-00-36</span>
-  </li>
-  <li>
-    <b>ул. Курнатовского, 25</b>
-    <span>+7 (3022) 50-09-01</span>
-  </li>
-  <li>
-    <b>Объездное ш., 24А, стр. 3</b>
-    <span>+7 (924) 818-00-59</span>
-  </li>
-  <li>
-    <b>Вокзальная ул., 3А</b>
-    <span>+7 (924) 818-00-36</span>
-  </li>
-</ul>
-
-<div class="map"><img src="/img/ya_karta.jpg" alt=""></div>
+<?php if (!empty($addresses)): ?>
+  <h3 class="h1">Адреса магазинов</h3>
+  <ul class="ul-5">
+    <?php foreach ($addresses as $index => $address): ?>
+      <li data-coords="<?= $address->getCoordsString() ?>">
+        <b><?= $address->title ?></b>
+        <i><?= $address->getCleanAddress() ?></i>
+        <span><?= $address->getFirstPhone() ?></span>
+      </li>
+    <?php endforeach; ?>
+  </ul>
+  <div id="yandex-map" class="map"></div>
+<?php endif; ?>
