@@ -480,28 +480,4 @@ $this->title = $page->seo('title', $page->model->title);
 <h4 class="h1">Читайте отзывы о нас!</h4>
 <!--тут отзывы-->
 
-<div class="b4 b4-1">
-  <div class="b4-ttl">
-    <h4>Поле Керамика надежный партнер</h4>
-  </div>
-  <div class="b4-ch">
-    <div class="b4-l">
-      <div class="b4-ch-t">
-        <h5>Для застройщиков и крупных объектов в Забайкальском крае</h5>
-        <p>Оптовые поставки керамической плитки и керамогранита</p>
-      </div>
-      <button>Получить КП</button>
-    </div>
-    <div class="b4-r"><img src="/i/b4-1.png" alt=""></div>
-  </div>
-  <div class="b4-ch">
-    <div class="b4-l">
-      <div class="b4-ch-t">
-        <h5>Для строителей и дизайнеров интерьера</h5>
-        <p>Обновленные условия, помощь и выгода! (текст - оффер для партнеров)</p>
-      </div>
-      <button>Получить условия</button>
-    </div>
-    <div class="b4-r"><img src="/i/b4-2.png" alt=""></div>
-  </div>
-</div>
+<?= $this->renderFile('@app/components/_offer.php', []) ?>

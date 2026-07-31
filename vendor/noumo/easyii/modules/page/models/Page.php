@@ -16,9 +16,12 @@ class Page extends \yii\easyii\components\ActiveRecord
   {
     return [
       [['title', 'slug'], 'required'],
-      [['title', 'text'], 'trim'],
+      [['title', 'text', 'str1', 'str2', 'image'], 'trim'],
       ['title', 'string', 'max' => 255],
       ['slug', 'string', 'max' => 128],
+      ['str1', 'string', 'max' => 1024],
+      ['image', 'string', 'max' => 255],
+      ['image', 'default', 'value' => null],
       ['slug', 'unique'],
       [['created_at', 'updated_at'], 'integer']
     ];
@@ -30,6 +33,8 @@ class Page extends \yii\easyii\components\ActiveRecord
       'title' => Yii::t('easyii', 'Title'),
       'text' => Yii::t('easyii', 'Text'),
       'slug' => Yii::t('easyii', 'Slug'),
+      'str1' => 'Дополнительное поле',
+      'image' => 'Изображение',
     ];
   }
 
@@ -52,5 +57,17 @@ class Page extends \yii\easyii\components\ActiveRecord
       return is_array($contacts) ? $contacts : [];
     }
     return [];
+  }
+
+  /**
+   * Получить URL изображения
+   * @return string|null
+   */
+  public function getImageUrl()
+  {
+    if ($this->image) {
+      return '/uploads/pages/' . $this->image;
+    }
+    return null;
   }
 }

@@ -45,4 +45,14 @@ class SiteController extends Controller
       'addresses' => Addresses::find()->where(['status' => Addresses::STATUS_ON])->all()
     ]);
   }
+
+  public function actionPartneram()
+  {
+    $page = Page::get('page-partneram');
+    MetaWidget::widget(['model' => $page]);
+
+    return $this->render('partneram', [
+      'page' => $page
+    ]);
+  }
 }

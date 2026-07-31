@@ -7,6 +7,7 @@ use yii\easyii\components\Controller;
 use yii\easyii\modules\page\models\ContactForm;
 use yii\easyii\modules\page\models\Page;
 use yii\widgets\ActiveForm;
+use yii\web\UploadedFile;
 
 class AController extends Controller
 {
@@ -26,12 +27,18 @@ class AController extends Controller
   {
     $model = new Page;
 
-    if($model->load(Yii::$app->request->post())){
-      if(Yii::$app->request->isAjax){
+    if ($model->load(Yii::$app->request->post())) {
+      if (Yii::$app->request->isAjax) {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         return ActiveForm::validate($model);
       } else {
-        if($model->save()){
+        // Загрузка изображения
+        $imageFile = UploadedFile::getInstance($model, 'image');
+        if ($imageFile) {
+          $model->image = $this->uploadImage($imageFile);
+        }
+
+        if ($model->save()) {
           $this->flash('success', Yii::t('easyii/page', 'Page created'));
           return $this->redirect(['/admin/' . $this->module->id]);
         } else {
@@ -40,7 +47,7 @@ class AController extends Controller
         }
       }
     } else {
-      if($slug) $model->slug = $slug;
+      if ($slug) $model->slug = $slug;
 
       return $this->render('create', [
         'model' => $model
@@ -52,17 +59,32 @@ class AController extends Controller
   {
     $model = Page::findOne($id);
 
-    if($model === null){
+    if ($model === null) {
       $this->flash('error', Yii::t('easyii', 'Not found'));
       return $this->redirect(['/admin/' . $this->module->id]);
     }
 
-    if($model->load(Yii::$app->request->post())){
-      if(Yii::$app->request->isAjax){
+    $oldImage = $model->image;
+
+    if ($model->load(Yii::$app->request->post())) {
+      if (Yii::$app->request->isAjax) {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         return ActiveForm::validate($model);
       } else {
-        if($model->save()){
+        // Загрузка изображения
+        $imageFile = UploadedFile::getInstance($model, 'image');
+        if ($imageFile) {
+          // Удаляем старое изображение
+          if ($oldImage) {
+            $this->deleteImage($oldImage);
+          }
+          $model->image = $this->uploadImage($imageFile);
+        } else {
+          // Если изображение не загружено, сохраняем старое
+          $model->image = $oldImage;
+        }
+
+        if ($model->save()) {
           $this->flash('success', Yii::t('easyii/page', 'Page updated'));
         } else {
           $this->flash('error', Yii::t('easyii', 'Update error. {0}', $model->formatErrors()));
@@ -78,7 +100,12 @@ class AController extends Controller
 
   public function actionDelete($id)
   {
-    if(($model = Page::findOne($id))){
+    $model = Page::findOne($id);
+    if ($model) {
+      // Удаляем изображение
+      if ($model->image) {
+        $this->deleteImage($model->image);
+      }
       $model->delete();
     } else {
       $this->error = Yii::t('easyii', 'Not found');
@@ -90,7 +117,7 @@ class AController extends Controller
   {
     $page = Page::findOne($id);
 
-    if($page === null){
+    if ($page === null) {
       $this->flash('error', Yii::t('easyii', 'Not found'));
       return $this->redirect(['/admin/' . $this->module->id]);
     }
@@ -101,7 +128,6 @@ class AController extends Controller
     foreach ($contactsData as $contact) {
       $model = new ContactForm();
       $model->attributes = $contact;
-      // Значения по умолчанию для старых записей
       if (empty($model->width)) $model->width = 20;
       if (empty($model->height)) $model->height = 20;
       $models[] = $model;
@@ -151,5 +177,35 @@ class AController extends Controller
       'page' => $page,
       'models' => $models,
     ]);
+  }
+
+  /**
+   * Загрузка изображения
+   * @param UploadedFile $file
+   * @return string имя файла
+   */
+  private function uploadImage($file)
+  {
+    $dir = Yii::getAlias('@webroot/uploads/pages/');
+    if (!is_dir($dir)) {
+      mkdir($dir, 0777, true);
+    }
+
+    $filename = time() . '_' . Yii::$app->security->generateRandomString(8) . '.' . $file->extension;
+    $file->saveAs($dir . $filename);
+
+    return $filename;
+  }
+
+  /**
+   * Удаление изображения
+   * @param string $filename
+   */
+  private function deleteImage($filename)
+  {
+    $path = Yii::getAlias('@webroot/uploads/pages/') . $filename;
+    if (file_exists($path)) {
+      unlink($path);
+    }
   }
 }

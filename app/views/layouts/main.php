@@ -19,7 +19,7 @@ $isHome = Yii::$app->controller->id === Yii::$app->defaultRoute && Yii::$app->co
             <li><a href="#">Каталог</a></li>
             <li><a href="#">Акции</a></li>
             <li><a href="#">Реализованные проекты</a></li>
-            <li><a href="#">Партнерам</a></li>
+            <li><a href="/partneram/">Партнерам</a></li>
             <li><a href="/about/">О нас</a>
               <ul>
                 <li><a href="/contacts/">Контакты</a></li>
