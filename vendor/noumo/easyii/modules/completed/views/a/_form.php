@@ -1,6 +1,7 @@
 <?php
 //vendor/noumo/easyii/modules/completed/views/a/_form.php
 use yii\easyii\helpers\Image;
+use yii\easyii\modules\completed\models\CompletedTag;
 use yii\easyii\widgets\DateTimePicker;
 use yii\easyii\widgets\Redactor;
 use yii\easyii\widgets\SeoForm;
@@ -16,16 +17,15 @@ $module = $this->context->module->id;
   'options' => ['enctype' => 'multipart/form-data', 'class' => 'model-form']
 ]); ?>
 <?= $form->field($model, 'title') ?>
-<?php if($this->context->module->settings['enableThumb']) : ?>
+
   <?php if($model->image) : ?>
     <img src="<?= Image::thumb($model->image, 240) ?>">
     <a href="<?= Url::to(['/admin/' . $module . '/a/clear-image', 'id' => $model->completed_id]) ?>" class="text-danger confirm-delete" title="<?= Yii::t('easyii', 'Clear image') ?>"><?= Yii::t('easyii', 'Clear image') ?></a>
   <?php endif; ?>
   <?= $form->field($model, 'image')->fileInput() ?>
-<?php endif; ?>
-<?php if($this->context->module->settings['enableShort']) : ?>
+
   <?= $form->field($model, 'short')->textarea() ?>
-<?php endif; ?>
+
 <?= $form->field($model, 'text')->widget(Redactor::class, [
   'options' => [
     'minHeight' => 400,
@@ -34,8 +34,27 @@ $module = $this->context->module->id;
     'plugins' => ['fullscreen']
   ]
 ]) ?>
-
+<?php
+$allTags = CompletedTag::find()->orderBy(['name' => SORT_ASC])->all();
+if (!empty($allTags)): ?>
+  <div class="form-group">
+    <label class="control-label">Теги</label>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding:8px 0;">
+      <?php foreach ($allTags as $tag): ?>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-weight:normal;">
+          <input type="checkbox"
+                 name="Completed[selectedTags][]"
+                 value="<?= $tag->tag_id ?>"
+            <?= in_array($tag->tag_id, $model->selectedTags) ? 'checked' : '' ?>>
+          <?= $tag->name ?>
+        </label>
+      <?php endforeach; ?>
+    </div>
+  </div>
+<?php endif; ?>
 <?= $form->field($model, 'time')->widget(DateTimePicker::class); ?>
+
+
 
 <?php if(IS_ROOT) : ?>
   <?= $form->field($model, 'slug') ?>

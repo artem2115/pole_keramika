@@ -48,7 +48,7 @@ class AController extends Controller
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         return ActiveForm::validate($model);
       } else {
-        if(isset($_FILES) && $this->module->settings['enableThumb']){
+        if(isset($_FILES)){
           $model->image = UploadedFile::getInstance($model, 'image');
           if($model->image && $model->validate(['image'])){
             $model->image = Image::upload($model->image, 'completed');
@@ -85,7 +85,7 @@ class AController extends Controller
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         return ActiveForm::validate($model);
       } else {
-        if(isset($_FILES) && $this->module->settings['enableThumb']){
+        if(isset($_FILES)){
           $model->image = UploadedFile::getInstance($model, 'image');
           if($model->image && $model->validate(['image'])){
             $model->image = Image::upload($model->image, 'completed');

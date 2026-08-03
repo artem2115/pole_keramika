@@ -1,5 +1,6 @@
 <?php
-//vendor/noumo/easyii/modules/completed/views/a/_menu.php
+// vendor/noumo/easyii/modules/completed/views/a/_menu.php
+
 use yii\helpers\Url;
 
 $action = $this->context->action->id;
@@ -15,6 +16,12 @@ $module = $this->context->module->id;
     </a>
   </li>
   <li <?= ($action === 'create') ? 'class="active"' : '' ?>>
-    <a href="<?= Url::to(['/admin/' . $module . '/a/create']) ?>"><?= Yii::t('easyii', 'Create') ?></a></li>
+    <a href="<?= Url::to(['/admin/' . $module . '/a/create']) ?>"><?= Yii::t('easyii', 'Create') ?></a>
+  </li>
+  <li>
+    <a href="<?= Url::to(['/admin/' . $module . '/tags']) ?>">
+      <i class="glyphicon glyphicon-tags"></i> Теги
+    </a>
+  </li>
 </ul>
 <br/>

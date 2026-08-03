@@ -1,5 +1,6 @@
 <?php
-//vendor/noumo/easyii/modules/completed/views/a/index.php
+// vendor/noumo/easyii/modules/completed/views/a/index.php
+
 use yii\easyii\modules\completed\models\Completed;
 use yii\helpers\Html;
 use yii\helpers\Url;
