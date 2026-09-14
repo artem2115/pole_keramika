@@ -453,30 +453,7 @@ $this->title = $page->seo('title', $page->model->title);
     <img src="/img/video.png" alt="">
   </div>
 </div>
-
-<h3 class="h1">Адреса магазинов</h3>
-
-<ul class="ul-5">
-  <li>
-    <b>Вокзальная ул., 3А</b>
-    <span>+7 (924) 818-00-36</span>
-  </li>
-  <li>
-    <b>ул. Курнатовского, 25</b>
-    <span>+7 (3022) 50-09-01</span>
-  </li>
-  <li>
-    <b>Объездное ш., 24А, стр. 3</b>
-    <span>+7 (924) 818-00-59</span>
-  </li>
-  <li>
-    <b>Вокзальная ул., 3А</b>
-    <span>+7 (924) 818-00-36</span>
-  </li>
-</ul>
-
-<div class="map"><img src="/img/ya_karta.jpg" alt=""></div>
-
+<?= $this->renderFile('@app/components/_addresses_map.php') ?>
 <h4 class="h1">Читайте отзывы о нас!</h4>
 <!--тут отзывы-->
 

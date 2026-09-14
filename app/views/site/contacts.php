@@ -26,17 +26,4 @@ $this->title = $page->seo('title', $page->model->title);
     <?php endforeach; ?>
   </ul>
 <?php endif; ?>
-
-<?php if (!empty($addresses)): ?>
-  <h3 class="h1">Адреса магазинов</h3>
-  <ul class="ul-5">
-    <?php foreach ($addresses as $index => $address): ?>
-      <li data-coords="<?= $address->getCoordsString() ?>">
-        <b><?= $address->title ?></b>
-        <i><?= $address->getCleanAddress() ?></i>
-        <span><?= $address->getFirstPhone() ?></span>
-      </li>
-    <?php endforeach; ?>
-  </ul>
-  <div id="yandex-map" class="map"></div>
-<?php endif; ?>
+<?= $this->renderFile('@app/components/_addresses_map.php') ?>

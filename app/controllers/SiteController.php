@@ -41,8 +41,7 @@ class SiteController extends Controller
 
     return $this->render('contacts', [
       'page' => $page,
-      'contacts' => $page_c ? $page_c->getContacts() : [],
-      'addresses' => Addresses::find()->where(['status' => Addresses::STATUS_ON])->all()
+      'contacts' => $page_c ? $page_c->getContacts() : []
     ]);
   }
 
