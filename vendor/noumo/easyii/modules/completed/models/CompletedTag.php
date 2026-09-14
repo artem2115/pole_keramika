@@ -42,16 +42,34 @@ class CompletedTag extends \yii\easyii\components\ActiveRecord
   {
     if (parent::beforeSave($insert)) {
       if (empty($this->slug)) {
-        // Генерируем slug из name
-        $slug = mb_strtolower(trim($this->name));
-        $slug = str_replace(' ', '-', $slug);
-        $slug = preg_replace('/[^a-z0-9\-]/u', '', $slug);
-        $slug = preg_replace('/-+/', '-', $slug);
-        $this->slug = $slug;
+        $this->slug = $this->transliterate($this->name);
       }
       return true;
     }
     return false;
+  }
+
+  private function transliterate($string)
+  {
+    $string = mb_strtolower(trim($string));
+
+    $replace = [
+      'а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd',
+      'е' => 'e', 'ё' => 'yo', 'ж' => 'zh', 'з' => 'z', 'и' => 'i',
+      'й' => 'y', 'к' => 'k', 'л' => 'l', 'м' => 'm', 'н' => 'n',
+      'о' => 'o', 'п' => 'p', 'р' => 'r', 'с' => 's', 'т' => 't',
+      'у' => 'u', 'ф' => 'f', 'х' => 'h', 'ц' => 'c', 'ч' => 'ch',
+      'ш' => 'sh', 'щ' => 'sch', 'ъ' => '', 'ы' => 'y', 'ь' => '',
+      'э' => 'e', 'ю' => 'yu', 'я' => 'ya',
+      ' ' => '-', '_' => '-', ',' => '', '.' => '',
+    ];
+
+    $string = strtr($string, $replace);
+    $string = preg_replace('/[^a-z0-9\-]/', '', $string);
+    $string = preg_replace('/-+/', '-', $string);
+    $string = trim($string, '-');
+
+    return $string;
   }
 
   /**

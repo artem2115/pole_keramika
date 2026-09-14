@@ -25,9 +25,9 @@ class Completed extends \yii\easyii\components\ActiveRecord
   public function rules()
   {
     return [
-      [['text', 'title'], 'required'],
-      [['title', 'short', 'text'], 'trim'],
-      ['title', 'string', 'max' => 255],
+      [['text', 'title', 'subtitle'], 'required'],
+      [['title', 'short', 'text', 'subtitle'], 'trim'],
+      [['title', 'subtitle'], 'string', 'max' => 255],
       ['image', 'image'],
       [['views', 'time', 'status'], 'integer'],
       ['short', 'filter', 'filter' => 'strip_tags'],
@@ -43,6 +43,7 @@ class Completed extends \yii\easyii\components\ActiveRecord
   {
     return [
       'title' => Yii::t('easyii', 'Title'),
+      'subtitle' => 'Подзаголовок',
       'text' => Yii::t('easyii', 'Text'),
       'short' => Yii::t('easyii/completed', 'Short'),
       'image' => Yii::t('easyii', 'Image'),
@@ -107,10 +108,8 @@ class Completed extends \yii\easyii\components\ActiveRecord
   {
     parent::afterSave($insert, $changedAttributes);
 
-    // Удаляем старые связи
     CompletedTagRel::deleteAll(['completed_id' => $this->completed_id]);
 
-    // Создаем новые связи
     if (!empty($this->selectedTags)) {
       foreach ($this->selectedTags as $tagId) {
         $rel = new CompletedTagRel();
@@ -121,9 +120,11 @@ class Completed extends \yii\easyii\components\ActiveRecord
     }
   }
 
-  /**
-   * После загрузки из БД заполняем selectedTags
-   */
+  public function seo($attribute, $default = '')
+  {
+    return !empty($this->seo->{$attribute}) ? $this->seo->{$attribute} : $default;
+  }
+
   public function afterFind()
   {
     parent::afterFind();
@@ -134,24 +135,17 @@ class Completed extends \yii\easyii\components\ActiveRecord
     }
   }
 
-  /**
-   * Перед удалением удаляем связи и фото
-   */
   public function beforeDelete()
   {
     if (!parent::beforeDelete()) {
       return false;
     }
 
-    // Удаляем связи с тегами через модель
     CompletedTagRel::deleteAll(['completed_id' => $this->completed_id]);
 
     return true;
   }
 
-  /**
-   * После удаления удаляем фото и изображение
-   */
   public function afterDelete()
   {
     parent::afterDelete();

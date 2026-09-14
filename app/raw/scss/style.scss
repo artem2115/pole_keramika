@@ -539,8 +539,10 @@ input{color:$colorGray900}
 }
 
 .tabs2{font-weight:$fwMedium-500;margin-top:10px;
-  li{@extend %transition-02;display:inline-block;background-color:$colorGray25;padding:16px 24px;border-radius:100px;margin:5px 5px 5px 0;cursor:pointer;
-    &:hover{background-color:$colorGray50}
+  li{display:inline-block;border-radius:100px;margin:5px 5px 5px 0;cursor:pointer;overflow:hidden;
+    a{display:inline-block;padding:16px 24px;background-color:$colorGray25;text-decoration:none;color:$colorGray900;
+      &:hover{background-color:$colorGray50}
+    }
   }
   &.tabs2-2{
     li{padding:12px 16px}

@@ -17,6 +17,7 @@ $module = $this->context->module->id;
   'options' => ['enctype' => 'multipart/form-data', 'class' => 'model-form']
 ]); ?>
 <?= $form->field($model, 'title') ?>
+<?= $form->field($model, 'subtitle') ?>
 
   <?php if($model->image) : ?>
     <img src="<?= Image::thumb($model->image, 240) ?>">

@@ -68,6 +68,83 @@ $(function(){
     click: 'click'
   };
 
+  function isVisible(elem){
+    // Проверяем сам элемент
+    const rect = elem.getBoundingClientRect();
+    const windowHeight = document.documentElement.clientHeight;
+    const windowWidth = document.documentElement.clientWidth;
+
+    if (
+      rect.width > 0 &&
+      rect.height > 0 &&
+      rect.top < windowHeight + 200 &&
+      rect.bottom > -200 &&
+      rect.left < windowWidth + 200 &&
+      rect.right > -200
+    ) {
+      return true;
+    }
+
+    // Проверяем ближайшего родителя (на случай если img не отрендерен)
+    let parent = elem.parentElement;
+    while (parent) {
+      const parentRect = parent.getBoundingClientRect();
+      if (
+        parentRect.width > 0 &&
+        parentRect.height > 0 &&
+        parentRect.top < windowHeight + 200 &&
+        parentRect.bottom > -200 &&
+        parentRect.left < windowWidth + 200 &&
+        parentRect.right > -200
+      ) {
+        return true;
+      }
+      parent = parent.parentElement;
+    }
+
+    return false;
+  }
+
+  function showVisible(forceAll){
+    const elems = document.querySelectorAll('iframe[data-src], img[data-src], img[data-srcset]');
+    let anyLoaded = false;
+
+    elems.forEach(elem => {
+      if(!forceAll && !isVisible(elem)) return;
+
+      anyLoaded = true;
+
+      const src = elem.getAttribute('data-src');
+      if(src){
+        elem.src = src;
+        elem.removeAttribute('data-src');
+      }
+
+      const srcset = elem.getAttribute('data-srcset');
+      if(srcset){
+        elem.srcset = srcset;
+        elem.removeAttribute('data-srcset');
+      }
+    });
+
+    // Если после проверки ни один не загрузился — пробуем загрузить все
+    if (!anyLoaded && !forceAll && elems.length > 0) {
+      showVisible(true);
+    }
+  }
+
+  window.addEventListener('scroll', function() { showVisible(false); });
+  window.addEventListener('resize', function() { showVisible(false); });
+  window.addEventListener('load', function() {
+    setTimeout(function() { showVisible(false); }, 100);
+    setTimeout(function() { showVisible(false); }, 500);
+    setTimeout(function() { showVisible(false); }, 1000);
+  });
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() { showVisible(false); }, 100);
+    setTimeout(function() { showVisible(false); }, 500);
+  });
+
   function addOpenModalClass(){
     const pagePosition = window.scrollY;
     document.body.classList.add(CLASSES.openModal);
