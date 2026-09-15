@@ -1,3 +1,4 @@
+//app/raw/js/site.js
 //сохранение свг спрайта в localStorage
 (function(window, document){
   'use strict';
@@ -47,7 +48,7 @@
 // Основной код
 $(function(){
 
-  const $body = $('body');
+  const body = $('body');
   const header = $("header");
   const ul_3 = $('.ul-3');
   const sl_1 = $('.sl-1');
@@ -55,7 +56,10 @@ $(function(){
   const prods_2 = $('.prods-2-sl');
   const sl_9 = $('.sl-9');
   const sl_2_for = $('.sl-2-for');
-  const $cover = $('<div id="cover"/>').appendTo('body');
+  const word_click = 'click';
+  const word_active = 'active';
+  const word_openModal = 'openModal';
+  const cover = $('<div id="cover"/>').appendTo('body');
   const preArrow = '<button class="slick-next"><svg><use xlink:href="#arr-l"></use></svg></button>';
   const nextArrow = '<button class="slick-prev"><svg><use xlink:href="#arr-r"></use></svg></button>';
 
@@ -64,8 +68,7 @@ $(function(){
     openModal: 'openModal',
     active: 'active',
     hovered: 'hovered',
-    covNav: 'cov_nav',
-    click: 'click'
+    covNav: 'cov_nav'
   };
 
   function isVisible(elem){
@@ -147,14 +150,14 @@ $(function(){
 
   function addOpenModalClass(){
     const pagePosition = window.scrollY;
-    document.body.classList.add(CLASSES.openModal);
+    document.body.classList.add(word_openModal);
     document.body.dataset.position = pagePosition;
     document.body.style.top = -pagePosition + 'px';
   }
 
   function removeOpenModalClass(){
     const pagePosition = parseInt(document.body.dataset.position, 10) || 0;
-    $body.removeClass(CLASSES.openModal);
+    body.removeClass(word_openModal);
     window.scrollTo({top: pagePosition, left: 0, behavior: 'instant'});
     document.body.removeAttribute('style');
     delete document.body.dataset.position;
@@ -172,10 +175,10 @@ $(function(){
         $(this).addClass('has-submenu');
       }
     });
-    $('nav > ul > li span a', mn_body).on(CLASSES.click, function(e){
+    $('nav > ul > li span a', mn_body).on(word_click, function(e){
       let $this = $(this);
       e.preventDefault();
-      $this.parents('li').toggleClass(CLASSES.active);
+      $this.parents('li').toggleClass(word_active);
     })
   }
 
@@ -183,28 +186,28 @@ $(function(){
     $('.mn_body').append($('.htr [data-modal=order_call]'))
   }
 
-  $(document).on('click', '.tNav', function(){
-    $body.toggleClass(CLASSES.mNav);
-    $cover.toggleClass(CLASSES.covNav).fadeToggle();
+  $(document).on(word_click, '.tNav', function(){
+    body.toggleClass(CLASSES.mNav);
+    cover.toggleClass(CLASSES.covNav).fadeToggle();
 
-    if($body.hasClass(CLASSES.mNav)){
+    if(body.hasClass(CLASSES.mNav)){
       addOpenModalClass();
     } else {
       removeOpenModalClass();
     }
   });
 
-  $(document).on('click', '.mn_body nav > ul > li.has-submenu > a', function(e) {
+  $(document).on(word_click, '.mn_body nav > ul > li.has-submenu > a', function(e) {
     e.preventDefault();
     const $li = $(this).parent();
     $li.toggleClass('open');
     $li.siblings().removeClass('open');
   });
 
-  $cover.on('click', function(){
-    if($body.hasClass(CLASSES.mNav)){
-      $body.removeClass(CLASSES.mNav);
-      $cover.removeClass(CLASSES.covNav).fadeOut();
+  cover.on(word_click, function(){
+    if(body.hasClass(CLASSES.mNav)){
+      body.removeClass(CLASSES.mNav);
+      cover.removeClass(CLASSES.covNav).fadeOut();
       removeOpenModalClass();
     }
   });
@@ -423,7 +426,7 @@ $(function(){
     }
   });
 
-  $(document).on('click', '.sb1-ttl', function() {
+  $(document).on(word_click, '.sb1-ttl', function() {
     if (!$(this).find('i').length) return;
 
     const $block = $(this).closest('.sb1');
@@ -468,7 +471,7 @@ $(function(){
     switchThgImage($(this).closest('.i-thg'), $(this).data('index'));
   });
 
-  $(document).on('click', '.i-thg .i-thg-dots span', function() {
+  $(document).on(word_click, '.i-thg .i-thg-dots span', function() {
     switchThgImage($(this).closest('.i-thg'), $(this).data('index'));
   });
 
@@ -478,23 +481,23 @@ $(function(){
       $('.f-app-b').html($('.f-r'));
       $('.f-app').prepend('<div class="f-close"></div>');
 
-      $(document).on('click', '.fs-1', function() {
+      $(document).on(word_click, '.fs-1', function() {
         const $fs = $('.fs-1');
         const $fApp = $('.f-app');
 
         if ($fs.hasClass('active')) {
-          $body.removeClass('f-open');
+          body.removeClass('f-open');
           $fs.removeClass('active');
           $fApp.removeClass('active');
         } else {
-          $body.addClass('f-open');
+          body.addClass('f-open');
           $fs.addClass('active');
           $fApp.addClass('active');
         }
       });
 
-      $(document).on('click', '.f-close', function() {
-        $body.removeClass('f-open');
+      $(document).on(word_click, '.f-close', function() {
+        body.removeClass('f-open');
         $('.fs-1').removeClass('active');
         $('.f-app').removeClass('active');
       });
@@ -508,4 +511,65 @@ $(function(){
     }
     sessionStorage.setItem('hb-scrolled', '1');
   }
+
+  $(document).on(word_click, '[data-modal]', function(e){
+    e.preventDefault();
+    var data_modal = $(this).attr('data-modal');
+    if(data_modal === 'order_design_project'){//Заказать дизайн проект
+      $.ajax({
+        url: '/ajax/get-modal-3d-project',
+        type: 'POST',
+        dataType: 'html',
+        data: {
+          _csrf: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(html){
+          $('body').append(html);
+          get_modal($('.modal'));
+          // Вставляем модалку в body
+          //$('body').append(response);
+          // Открываем
+          //$('.modal-3d').fadeIn(300);
+          //$('body').addClass('openModal');
+        },
+        error: function(xhr){
+          console.error('Ошибка загрузки модалки:', xhr.responseText);
+        }
+      });
+    }
+    if(data_modal === 'get_3d_project'){
+      //здесь код вызова модалки с формой заказа бесплатного 3д проекта
+    }
+  });
+
+  function get_modal(modal){
+    cover.fadeIn();
+    modal.fadeIn();
+    addOpenModalClass();
+  }
+  function closeModal(){
+    cover.removeClass(word_active).fadeOut();
+    $('.modalWrap').fadeOut(function(){
+      $(this).remove()
+    });
+
+    if(body.hasClass(word_openModal)){
+      removeOpenModalClass()
+    }
+  }
+  
+  body.on(word_click, '#cover,.mn_top i, .close, #close-modal', function(){
+    closeModal();
+  });
+  body.on(word_click, '.modalWrap', function(e){
+    if(!$(e.target).closest('.modal').length){
+      closeModal();
+    }
+  });
+  $(document).on('keydown', function(e){
+    if(e.keyCode === 27){
+      closeModal();
+    }
+  });
+  
 });

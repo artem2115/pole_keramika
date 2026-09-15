@@ -955,6 +955,46 @@ footer{padding:100px 0;border-top:1px solid $colorGray200}
   z-index: 400;
 }
 
+.modalWrap{position:fixed;width:100%;height:100%;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;z-index:2600;opacity:0}
+body.openModal{
+  .modalWrap{@extend %transition-02;opacity:1}
+}
+%symbol-close{@extend %transition-02;display:inline-block;font-size:rem(45px);padding-left:10px;cursor:pointer;padding-bottom:10px;opacity:0.8;@include transform(rotate(45deg));
+  &:hover{opacity:1}
+}
+.close{
+  &::after{@extend %symbol-close;content:"+";}
+}
+.modal{@extend %brad-4;position:relative;width:700px;background:$colorGray25;max-height:95vh;color:$colorGray900;padding:32px;overflow-x:hidden;overflow-y: auto;
+  &.active{display:block}
+  .close{position:absolute;right:13px;top:-14px;}
+  &.m1{width:500px;
+    .mBody{height:auto;}
+    .wr{height:auto;/*overflow-y:auto;*/margin-top:20px}
+  }
+  &.m2{width:60%;
+    .mBody{height:auto;}
+    .wr{height:auto;/*overflow-y:auto;*/margin-top:20px}
+  }
+  &.m3{width:320px;padding:16px}
+  &.m4{height:auto;
+    .mBody{padding-top:30px}
+    .wr{overflow-y:auto;margin-top:20px}
+  }
+  .form-group{padding:8px 0;}
+
+  //textarea{width:100%;border:0;background-color:transparent;height:150px;color:$gray-50}
+  //input[type=text],input[type=email],textarea{@extend %brad-4;display:block;width:100%;margin:0;border:1px solid $gray-400;color:$gray-500;padding:5px 15px;background-color:$colorWhite}
+  h3{font-size:rem(18px);}
+}
+.modal-header{padding-right:30px;
+  h3{padding-top:0;}
+}
+.b12{@extend %flex_sbc;gap:16px;padding-top:10px;
+  .btn1-b1{font-size:rem(14px);padding:9px 14px 11px;white-space:nowrap}
+  span{font-weight:$fwBolder-700;line-height:1.2}
+}
+
 /*@media*/
 @media (max-width:1301px){
   .b1-r{padding:42px;
