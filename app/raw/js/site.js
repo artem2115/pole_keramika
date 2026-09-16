@@ -526,11 +526,6 @@ $(function(){
         success: function(html){
           $('body').append(html);
           get_modal($('.modal'));
-          // Вставляем модалку в body
-          //$('body').append(response);
-          // Открываем
-          //$('.modal-3d').fadeIn(300);
-          //$('body').addClass('openModal');
         },
         error: function(xhr){
           console.error('Ошибка загрузки модалки:', xhr.responseText);
@@ -538,7 +533,24 @@ $(function(){
       });
     }
     if(data_modal === 'get_3d_project'){
-      //здесь код вызова модалки с формой заказа бесплатного 3д проекта
+      // Закрываем текущую модалку, потом открываем новую
+      closeModal(function(){
+        $.ajax({
+          url: '/ajax/get-3d-project-form',
+          type: 'POST',
+          dataType: 'html',
+          data: {
+            _csrf: $('meta[name="csrf-token"]').attr('content')
+          },
+          success: function(html){
+            $('body').append(html);
+            get_modal($('.modal'));
+          },
+          error: function(xhr){
+            console.error('Ошибка загрузки модалки:', xhr.responseText);
+          }
+        });
+      });
     }
   });
 
@@ -547,10 +559,13 @@ $(function(){
     modal.fadeIn();
     addOpenModalClass();
   }
-  function closeModal(){
+  function closeModal(callback){
     cover.removeClass(word_active).fadeOut();
     $('.modalWrap').fadeOut(function(){
-      $(this).remove()
+      $(this).remove();
+      if(typeof callback === 'function'){
+        callback();
+      }
     });
 
     if(body.hasClass(word_openModal)){
@@ -570,6 +585,30 @@ $(function(){
     if(e.keyCode === 27){
       closeModal();
     }
+  });
+
+  $(document).on('submit', '#form-3d-project', function(e){
+    e.preventDefault();
+    var $form = $(this);
+    $.ajax({
+      url: $form.attr('action'),
+      type: 'POST',
+      data: $form.serialize(),
+      cache: false,
+      dataType: 'json',
+      success: function(response){
+        if(response.success){
+          // Заменяем форму на сообщение об успехе
+          $form.replaceWith(response.message);
+        } else {
+          alert(response.message);
+        }
+      },
+      error: function(){
+        alert('Ошибка отправки. Попробуйте еще раз.');
+      }
+    });
+    return false;
   });
   
 });

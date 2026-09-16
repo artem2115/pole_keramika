@@ -1,18 +1,12 @@
 <?php
 
-use yii\easyii\modules\article\api\Article;
-use yii\easyii\modules\carousel\api\Carousel;
-use yii\easyii\modules\gallery\api\Gallery;
-use yii\easyii\modules\guestbook\api\Guestbook;
-use yii\easyii\modules\news\api\News;
-use yii\easyii\modules\text\api\Text;
 use yii\helpers\Html;
+use yii\helpers\Url;
+use yii\easyii\helpers\Image;
+use yii\easyii\modules\addresses\models\Addresses;
+
 $this->title = $page->seo('title', $page->model->title);
-
-
 ?>
-
-
 <div class="b1">
   <div class="b1-l"><img src="/img/3d-project.png" alt=""></div>
   <div class="b1-r">
@@ -28,7 +22,7 @@ $this->title = $page->seo('title', $page->model->title);
 <ul class="ul-1">
   <li>
     <i><svg><use xlink:href="#eye"></use></svg></i>
-    <div><a href="#">Бесплатный 3D проект</a> по вашей планировке</div>
+    <div><span data-modal="order_design_project">Бесплатный 3D проект</span> по вашей планировке</div>
   </li>
   <li>
     <i><svg><use xlink:href="#ware"></use></svg></i>
@@ -40,7 +34,7 @@ $this->title = $page->seo('title', $page->model->title);
   </li>
   <li>
     <i><svg><use xlink:href="#map"></use></svg></i>
-    <div><a href="#">5 магазинов</a> в Чите</div>
+    <div><a href="<?= Url::to(['/contacts']) ?>"><?= Addresses::pluralizeShops($shopsCount) ?></a> в Чите</div>
   </li>
   <li>
     <i><svg><use xlink:href="#check"></use></svg></i>
@@ -280,154 +274,30 @@ $this->title = $page->seo('title', $page->model->title);
   </figure>
 </div>
 <div class="prods-1-arrs"></div>
-<div class="h1">Реализованные проекты</div>
-<div class="ar-h1">Для вдохновения</div>
-<ul class="ul-3">
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <i><img src="/img/232x232.png" alt=""></i>
-      <h5>Современный санузел с акцентом на раковину</h5>
-    </a>
-  </li>
-  <li>
-    <a href="#">
-      <b>Смотреть все</b>
-      <i><svg><use xlink:href="#arr_rt"></use></svg></i>
-    </a>
-  </li>
-</ul>
+<?php if (!empty($completed)): ?>
+  <div class="h1">Реализованные проекты</div>
+  <div class="ar-h1">Для вдохновения</div>
+  <ul class="ul-3">
+    <?php foreach ($completed as $item): ?>
+      <li>
+        <a href="<?= Url::to(['/completed/' . $item->slug]) ?>">
+          <i>
+            <?php if ($item->image): ?>
+              <img src="<?= Image::thumb($item->image, 430, 430) ?>" alt="<?= Html::encode($item->title) ?>">
+            <?php endif; ?>
+          </i>
+          <h5><?= Html::encode($item->title) ?></h5>
+        </a>
+      </li>
+    <?php endforeach; ?>
+    <li>
+      <a href="<?= Url::to(['/completed']) ?>">
+        <b>Смотреть все</b>
+        <i><svg><use xlink:href="#arr_rt"></use></svg></i>
+      </a>
+    </li>
+  </ul>
+<?php endif; ?>
 
 <div class="b2">
   <div class="b2-l">
@@ -435,8 +305,8 @@ $this->title = $page->seo('title', $page->model->title);
   </div>
   <div class="b2-r">
     <div class="h2">Лучший проект - это проект сделанный для вашего дома</div>
-    <p>3D проект бесплатно для вашего дома, на основе ваших пожеланий, размеров комнаты и примеров, которые вам нравятся</p>
-    <button>Хочу 3D-проект</button>
+    <p>Бесплатный 3D-проект для вашего дома — на основе ваших пожеланий, размеров комнаты и примеров, которые вам нравятся.</p>
+    <button data-modal="order_design_project">Хочу 3D-проект</button>
   </div>
 </div>
 

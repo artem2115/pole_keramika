@@ -21,10 +21,8 @@ class CompletedController extends Controller
     $page = Page::get('page-completed');
     MetaWidget::widget(['model' => $page]);
 
-    // Запрос проектов
     $query = Completed::find()->where(['status' => Completed::STATUS_ON])->orderBy(['time' => SORT_DESC]);
 
-    // Фильтр по тегу
     if($tag){
       $tagModel = CompletedTag::findOne(['slug' => $tag]);
       if($tagModel){

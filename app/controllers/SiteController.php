@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use Yii;
 use yii\easyii\helpers\MetaWidget;
+use yii\easyii\modules\completed\models\Completed;
 use yii\easyii\modules\page\api\Page;
 use yii\easyii\modules\page\models\Page as PageModel;
 use yii\web\Controller;
@@ -29,7 +30,9 @@ class SiteController extends Controller
     MetaWidget::widget(['model' => $page]);
 
     return $this->render('index', [
-      'page' => $page
+      'page' => $page,
+      'completed' => Completed::find()->where(['status' => Completed::STATUS_ON])->orderBy(['time' => SORT_DESC])->limit(23)->all(),
+      'shopsCount' => Addresses::find()->where(['status' => Addresses::STATUS_ON])->count()
     ]);
   }
 

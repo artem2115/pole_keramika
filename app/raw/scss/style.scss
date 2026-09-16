@@ -310,7 +310,7 @@ input{color:$colorGray900}
     }
   }
 
-  a{@extend %a-td-un;color:$colorBrand500}
+  a,span[data-modal]{@extend %a-td-un;color:$colorBrand500;cursor:pointer}
 }
 
 .ul-2{display:grid;grid-template-columns: repeat(5, 1fr);gap:12px;font-weight:$fwMedium-500;padding:3% 0;
@@ -994,6 +994,7 @@ body.openModal{
   .btn1-b1{font-size:rem(14px);padding:9px 14px 11px;white-space:nowrap}
   span{font-weight:$fwBolder-700;line-height:1.2}
 }
+.form-agreement{font-size:rem(14px)}
 
 /*@media*/
 @media (max-width:1301px){

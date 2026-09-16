@@ -89,7 +89,7 @@ $isHome = Yii::$app->controller->id === Yii::$app->defaultRoute && Yii::$app->co
       <div class="ft-4">
         <div class="b5">
           <strong>Бесплатный дизайн-проект</strong>
-          <button>Оставить заявку</button>
+          <button data-modal="order_design_project">Оставить заявку</button>
         </div>
         <ul class="soc">
           <li><a href="#"><svg><use xlink:href="#tg"></use></svg></a></li>
