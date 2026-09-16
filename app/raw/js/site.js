@@ -515,6 +515,25 @@ $(function(){
   $(document).on(word_click, '[data-modal]', function(e){
     e.preventDefault();
     var data_modal = $(this).attr('data-modal');
+
+    if(data_modal === 'order_call'){//Заказать звонок
+      $.ajax({
+        url: '/ajax/get-feedback-form',
+        type: 'POST',
+        dataType: 'html',
+        data: {
+          _csrf: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(html){
+          $('body').append(html);
+          get_modal($('.modal'));
+        },
+        error: function(xhr){
+          console.error('Ошибка загрузки модалки:', xhr.responseText);
+        }
+      });
+    }
+
     if(data_modal === 'order_design_project'){//Заказать дизайн проект
       $.ajax({
         url: '/ajax/get-modal-3d-project',
@@ -598,7 +617,6 @@ $(function(){
       dataType: 'json',
       success: function(response){
         if(response.success){
-          // Заменяем форму на сообщение об успехе
           $form.replaceWith(response.message);
         } else {
           alert(response.message);

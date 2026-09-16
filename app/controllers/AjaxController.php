@@ -1,6 +1,7 @@
 <?php
 namespace app\controllers;
 
+use app\models\FeedbackCallForm;
 use Yii;
 use yii\web\NotFoundHttpException;
 use yii\easyii\modules\feedback\models\Feedback;
@@ -88,4 +89,58 @@ class AjaxController extends \yii\web\Controller
       'success' => false,
       'message' => !empty($errors) ? reset($errors) : 'Пожалуйста, заполните все поля правильно.'
     ];
-  }}
+  }
+
+  /**
+   * Модалка "Обратная связь" (Заказать звонок)
+   */
+  public function actionGetFeedbackForm()
+  {
+    $model = new FeedbackCallForm();
+
+    return $this->renderAjax('_modal_feedback_call', [
+      'modal_class' => 'm2',
+      'model' => $model,
+    ]);
+  }
+
+  /**
+   * Отправка заявки "Заказать звонок"
+   */
+  public function actionSendFeedbackCall()
+  {
+    if(!Yii::$app->request->isAjax || !Yii::$app->request->isPost){
+      throw new NotFoundHttpException(Yii::t('yii', 'Page not found.'));
+    }
+
+    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+    $model = new FeedbackCallForm();
+
+    if($model->load(Yii::$app->request->post()) && $model->validate()){
+      $feedback = new Feedback();
+      $feedback->name = $model->name;
+      $feedback->phone = $model->phone;
+      $feedback->title = 'Заказать звонок';
+      $feedback->text = 'Заказать звонок от ' . $model->name . '. Телефон: ' . $model->phone;
+
+      if($feedback->save(false)){
+        return [
+          'success' => true,
+          'message' => $this->renderPartial('_success_feedback_call'),
+        ];
+      } else {
+        return [
+          'success' => false,
+          'message' => 'Ошибка сохранения заявки. Попробуйте еще раз.'
+        ];
+      }
+    }
+
+    $errors = $model->getFirstErrors();
+    return [
+      'success' => false,
+      'message' => !empty($errors) ? reset($errors) : 'Пожалуйста, заполните все поля правильно.'
+    ];
+  }
+}
