@@ -577,6 +577,7 @@ $(function(){
     cover.fadeIn();
     modal.fadeIn();
     addOpenModalClass();
+    syncAgreeState(modal);
   }
   function closeModal(callback){
     cover.removeClass(word_active).fadeOut();
@@ -628,5 +629,24 @@ $(function(){
     });
     return false;
   });
-  
+
+
+  function syncAgreeState($modal){
+    const $checkbox = $modal.find('.ch_agree');
+    const $btn = $modal.find('.btn1-b1');
+
+    if(!$checkbox.length || !$btn.length) return;
+
+    // принудительно снимаем галочку при открытии
+    $checkbox.prop('checked', false);
+
+    const update = () => {
+      $btn.prop('disabled', !$checkbox.prop('checked'));
+    };
+
+    update();
+
+    // .off, чтобы не навешивать обработчик повторно
+    $checkbox.off('change.agree').on('change.agree', update);
+  }
 });

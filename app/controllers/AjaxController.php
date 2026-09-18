@@ -32,7 +32,7 @@ class AjaxController extends \yii\web\Controller
   public function actionGetModal3dProject()
   {
     return $this->renderAjax('_modal_3d_project', [
-      'modal_class' => 'm3'
+      'modal_class' => 'm_bnr'
     ]);
   }
 
@@ -44,7 +44,7 @@ class AjaxController extends \yii\web\Controller
     $model = new Feedback3dForm();
 
     return $this->renderAjax('_modal_3d_project_form', [
-      'modal_class' => 'm3',
+      'modal_class' => '',
       'model' => $model,
     ]);
   }
@@ -99,7 +99,7 @@ class AjaxController extends \yii\web\Controller
     $model = new FeedbackCallForm();
 
     return $this->renderAjax('_modal_feedback_call', [
-      'modal_class' => 'm2',
+      'modal_class' => '',
       'model' => $model,
     ]);
   }

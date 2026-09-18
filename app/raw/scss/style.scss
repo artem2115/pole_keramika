@@ -131,6 +131,7 @@ button{@extend %transition-02}
 
 %btn-b1{background-color:$colorBrand500;color:$colorGray15;
   &:hover{background-color:#cf4045;}
+  &[disabled]{background-color:$colorGray300;cursor:no-drop}
 }
 %btn-b2{background-color:$colorBrand100;color:$colorGray900;
   &:hover{background-color:#fbb9a8
@@ -718,7 +719,12 @@ input[type=checkbox] + var:hover, label:hover input[type=checkbox] + var{border-
     //span{padding-left:10px}
   }
 }
-
+.sb1-b label, .w_check{@extend %flex;align-items:center;cursor:pointer;gap:8px; padding:10px 0 9px;
+  input{width:20px;height:20px;background-color:red}
+}
+.w_check{display:inline-block;position:relative;padding-left:32px;
+  var{display:inline-block;position:absolute !important;left:0;top:10px;}
+}
 .b8{@extend %flex_sb;gap:60px;margin:60px 0;
   &.b8-2{gap:16px;
     .b8-1c{flex:0 0 70%;
@@ -965,10 +971,24 @@ body.openModal{
 .close{
   &::after{@extend %symbol-close;content:"+";}
 }
-.modal{@extend %brad-4;position:relative;width:700px;background:$colorGray25;max-height:95vh;color:$colorGray900;padding:32px;overflow-x:hidden;overflow-y: auto;
+
+.modal-header{padding:0 30px 5px 0;border-bottom:1px solid $colorGray200;
+  h3{padding:0 0 3px;}
+  p{font-size:rem(14px);color:$colorGray400}
+}
+.modal-body{padding-top:10px}
+.b12{@extend %flex_sbc;gap:16px;padding-top:10px;
+  .btn1-b1{font-size:rem(14px);padding:9px 14px 11px;white-space:nowrap}
+  span{font-weight:$fwBolder-700;line-height:1.2}
+}
+.form-agreement{font-size:rem(14px);
+  a{@extend %a-td-un;color:$colorBrand500}
+}
+
+.modal{@extend %brad-4;position:relative;width:700px;background:$colorGray25;max-height:95vh;color:$colorGray900;padding:40px;overflow-x:hidden;overflow-y: auto;
   &.active{display:block}
-  .close{position:absolute;right:13px;top:-14px;}
-  &.m1{width:500px;
+  .close{position:absolute;right:13px;top:8px;}
+  &.m1{width:480px;
     .mBody{height:auto;}
     .wr{height:auto;/*overflow-y:auto;*/margin-top:20px}
   }
@@ -976,25 +996,32 @@ body.openModal{
     .mBody{height:auto;}
     .wr{height:auto;/*overflow-y:auto;*/margin-top:20px}
   }
-  &.m3{width:320px;padding:16px}
+  &.m3{}
   &.m4{height:auto;
     .mBody{padding-top:30px}
     .wr{overflow-y:auto;margin-top:20px}
   }
-  .form-group{padding:8px 0;}
+  .form-group{padding:6px 0;
+    &.has-error{
+      input[type="text"]{border-color:$colorBrand500}
+    }
+  }
 
   //textarea{width:100%;border:0;background-color:transparent;height:150px;color:$gray-50}
   //input[type=text],input[type=email],textarea{@extend %brad-4;display:block;width:100%;margin:0;border:1px solid $gray-400;color:$gray-500;padding:5px 15px;background-color:$colorWhite}
   h3{font-size:rem(18px);}
+  &.m_bnr{width:320px;padding:16px;
+    .close{top:-14px;}
+    .modal-header{border:0;}
+    .modal-body{padding-top:0}
+  }
 }
-.modal-header{padding-right:30px;
-  h3{padding-top:0;}
-}
-.b12{@extend %flex_sbc;gap:16px;padding-top:10px;
-  .btn1-b1{font-size:rem(14px);padding:9px 14px 11px;white-space:nowrap}
-  span{font-weight:$fwBolder-700;line-height:1.2}
-}
-.form-agreement{font-size:rem(14px)}
+
+
+.f1{width:100%;}
+input[type=text]{@extend %brad-4;border:1px solid $colorGray200;padding:12px 16px 11px;color:$colorGray900;font-size:rem(15px);width:100%;}
+.control-label{padding-bottom:4px;display:block}
+input[type="text"]::placeholder {color: $colorGray300;opacity: 1;}
 
 /*@media*/
 @media (max-width:1301px){

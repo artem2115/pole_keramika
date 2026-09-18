@@ -17,6 +17,10 @@ $settings = [
       'Получить КП',
       'Получить условия'
     ],
+    'modals' => [
+      'get_kp',
+      'get_conditions'
+    ],
     'images' => [
       '/i/b4-1.webp',
       '/i/b4-2.webp'
@@ -29,6 +33,10 @@ $settings = [
     'buttons' => [
       'Получить КП',
       'Получить условия'
+    ],
+    'modals' => [
+      'get_kp',
+      'get_conditions'
     ],
     'images' => [
       '/i/b4-1.webp',
@@ -46,25 +54,23 @@ $config = $settings[$type] ?? $settings['main'];
       <h4><?= $config['title'] ?></h4>
     </div>
   <?php endif; ?>
-
   <div class="b4-ch">
     <div class="b4-l">
       <div class="b4-ch-t">
         <h5>Для застройщиков и крупных объектов в Забайкальском крае</h5>
         <p>Оптовые поставки керамической плитки и керамогранита</p>
       </div>
-      <button><?= $config['buttons'][0] ?></button>
+      <button type="button" data-modal="<?= $config['modals'][0] ?>"><?= $config['buttons'][0] ?></button>
     </div>
     <div class="b4-r"><img src="<?= $config['images'][0] ?>" alt=""></div>
   </div>
-
   <div class="b4-ch">
     <div class="b4-l">
       <div class="b4-ch-t">
         <h5>Для строителей и дизайнеров интерьера</h5>
         <p>Обновленные условия, помощь и выгода! (текст - оффер для партнеров)</p>
       </div>
-      <button><?= $config['buttons'][1] ?></button>
+      <button type="button" data-modal="<?= $config['modals'][1] ?>"><?= $config['buttons'][1] ?></button>
     </div>
     <div class="b4-r"><img src="<?= $config['images'][1] ?>" alt=""></div>
   </div>
