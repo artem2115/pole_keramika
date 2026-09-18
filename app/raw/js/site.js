@@ -516,6 +516,42 @@ $(function(){
     e.preventDefault();
     var data_modal = $(this).attr('data-modal');
 
+    if (data_modal === 'get_conditions') { // Получить условия
+      $.ajax({
+        url: '/ajax/get-conditions-form',
+        type: 'POST',
+        dataType: 'html',
+        data: {
+          _csrf: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function (html) {
+          $('body').append(html);
+          get_modal($('.modal'));
+        },
+        error: function (xhr) {
+          console.error('Ошибка загрузки модалки:', xhr.responseText);
+        }
+      });
+    }
+
+    if (data_modal === 'get_kp') { // Получить КП
+      $.ajax({
+        url: '/ajax/get-kp-form',
+        type: 'POST',
+        dataType: 'html',
+        data: {
+          _csrf: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function (html) {
+          $('body').append(html);
+          get_modal($('.modal'));
+        },
+        error: function (xhr) {
+          console.error('Ошибка загрузки модалки:', xhr.responseText);
+        }
+      });
+    }
+
     if(data_modal === 'order_call'){//Заказать звонок
       $.ajax({
         url: '/ajax/get-feedback-form',
@@ -605,6 +641,52 @@ $(function(){
     if(e.keyCode === 27){
       closeModal();
     }
+  });
+
+  $(document).on('submit', '#form-conditions', function (e) {
+    e.preventDefault();
+    var $form = $(this);
+    $.ajax({
+      url: $form.attr('action'),
+      type: 'POST',
+      data: $form.serialize(),
+      cache: false,
+      dataType: 'json',
+      success: function (response) {
+        if (response.success) {
+          $form.replaceWith(response.message);
+        } else {
+          alert(response.message);
+        }
+      },
+      error: function () {
+        alert('Ошибка отправки. Попробуйте еще раз.');
+      }
+    });
+    return false;
+  });
+
+  $(document).on('submit', '#form-kp', function (e) {
+    e.preventDefault();
+    var $form = $(this);
+    $.ajax({
+      url: $form.attr('action'),
+      type: 'POST',
+      data: $form.serialize(),
+      cache: false,
+      dataType: 'json',
+      success: function (response) {
+        if (response.success) {
+          $form.replaceWith(response.message);
+        } else {
+          alert(response.message);
+        }
+      },
+      error: function () {
+        alert('Ошибка отправки. Попробуйте еще раз.');
+      }
+    });
+    return false;
   });
 
   $(document).on('submit', '#form-3d-project', function(e){

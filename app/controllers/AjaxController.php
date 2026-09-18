@@ -2,6 +2,8 @@
 namespace app\controllers;
 
 use app\models\FeedbackCallForm;
+use app\models\FeedbackConditionsForm;
+use app\models\FeedbackKpForm;
 use Yii;
 use yii\web\NotFoundHttpException;
 use yii\easyii\modules\feedback\models\Feedback;
@@ -143,4 +145,117 @@ class AjaxController extends \yii\web\Controller
       'message' => !empty($errors) ? reset($errors) : 'Пожалуйста, заполните все поля правильно.'
     ];
   }
+
+  /**
+   * Модалка «Получить КП»
+   */
+  public function actionGetKpForm()
+  {
+    $model = new FeedbackKpForm();
+
+    return $this->renderAjax('_modal_kp_form', [
+      'modal_class' => '',
+      'model' => $model,
+    ]);
+  }
+
+  /**
+   * Отправка заявки на КП
+   */
+  public function actionSendKp()
+  {
+    if (!Yii::$app->request->isAjax || !Yii::$app->request->isPost) {
+      throw new NotFoundHttpException(Yii::t('yii', 'Page not found.'));
+    }
+
+    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+    $model = new FeedbackKpForm();
+
+    if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+      $feedback = new Feedback();
+      $feedback->name = $model->name;
+      $feedback->phone = $model->phone;
+      $feedback->email = $model->email;
+      $feedback->title = 'Заявка на КП';
+      $feedback->text = 'Заявка на КП от ' . $model->company . '. Контакт: ' . $model->name
+        . '. Телефон: ' . $model->phone
+        . ($model->email ? '. Email: ' . $model->email : '');
+
+      if ($feedback->save(false)) {
+        return [
+          'success' => true,
+          'message' => $this->renderPartial('_success_kp'),
+        ];
+      }
+
+      return [
+        'success' => false,
+        'message' => 'Ошибка сохранения заявки. Попробуйте еще раз.',
+      ];
+    }
+
+    $errors = $model->getFirstErrors();
+    return [
+      'success' => false,
+      'message' => !empty($errors) ? reset($errors) : 'Пожалуйста, заполните все поля правильно.',
+    ];
+  }
+
+  /**
+   * Модалка «Получить условия»
+   */
+  public function actionGetConditionsForm()
+  {
+    $model = new FeedbackConditionsForm();
+
+    return $this->renderAjax('_modal_conditions_form', [
+      'modal_class' => '',
+      'model' => $model,
+    ]);
+  }
+
+  /**
+   * Отправка заявки на партнёрские условия
+   */
+  public function actionSendConditions()
+  {
+    if (!Yii::$app->request->isAjax || !Yii::$app->request->isPost) {
+      throw new NotFoundHttpException(Yii::t('yii', 'Page not found.'));
+    }
+
+    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+    $model = new FeedbackConditionsForm();
+
+    if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+      $feedback = new Feedback();
+      $feedback->name = $model->name;
+      $feedback->phone = $model->phone;
+      $feedback->email = $model->email;
+      $feedback->title = 'Заявка на партнёрские условия';
+      $feedback->text = 'Заявка на партнёрские условия от ' . $model->name
+        . '. Телефон: ' . $model->phone
+        . ($model->email ? '. Email: ' . $model->email : '');
+
+      if ($feedback->save(false)) {
+        return [
+          'success' => true,
+          'message' => $this->renderPartial('_success_conditions'),
+        ];
+      }
+
+      return [
+        'success' => false,
+        'message' => 'Ошибка сохранения заявки. Попробуйте еще раз.',
+      ];
+    }
+
+    $errors = $model->getFirstErrors();
+    return [
+      'success' => false,
+      'message' => !empty($errors) ? reset($errors) : 'Пожалуйста, заполните все поля правильно.',
+    ];
+  }
+
 }
