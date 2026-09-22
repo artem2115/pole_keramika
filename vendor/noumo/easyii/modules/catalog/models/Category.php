@@ -26,7 +26,7 @@ class Category extends \yii\easyii\components\CategoryModel
       if(!$this->fields || !is_array($this->fields)){
         $this->fields = [];
       }
-      $this->fields = json_encode($this->fields);
+      $this->fields = json_encode($this->fields, JSON_UNESCAPED_UNICODE);
 
       return true;
     } else {

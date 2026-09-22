@@ -10,11 +10,17 @@ use yii\easyii\widgets\SeoForm;
 
 $settings = $this->context->module->settings;
 $module = $this->context->module->id;
+$collections = \yii\easyii\modules\collections\models\Collection::find()
+  ->where(['category_id' => $model->category_id])
+  ->orderBy(['title' => SORT_ASC])
+  ->all();
+$collectionsList = \yii\helpers\ArrayHelper::map($collections, 'collection_id', 'title');
 ?>
 
 <?php $form = ActiveForm::begin([
   'options' => ['enctype' => 'multipart/form-data', 'class' => 'model-form']
 ]); ?>
+<?= $form->field($model, 'collection_id')->dropDownList($collectionsList, ['prompt' => '— без коллекции —']) ?>
 <?= $form->field($model, 'title') ?>
 <?php if($settings['itemThumb']) : ?>
   <?php if($model->image) : ?>
@@ -37,6 +43,7 @@ $module = $this->context->module->id;
 
 <?= $form->field($model, 'available') ?>
 <?= $form->field($model, 'price') ?>
+<?= $form->field($model, 'old_price') ?>
 <?= $form->field($model, 'discount') ?>
 
 <?= $form->field($model, 'time')->widget(DateTimePicker::class); ?>

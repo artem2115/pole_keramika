@@ -81,6 +81,24 @@ class Collection extends \yii\easyii\components\ActiveRecord
       ['collection_id' => 'collection_id']);
   }
 
+  /**
+   * Получить все форматы из товаров коллекции
+   * @return array
+   */
+  public function getFormatsList()
+  {
+    $sizes = \yii\easyii\modules\catalog\models\ItemData::find()
+      ->alias('d')
+      ->innerJoin(['i' => \yii\easyii\modules\catalog\models\Item::tableName()], 'i.item_id = d.item_id')
+      ->where(['i.collection_id' => $this->collection_id])
+      ->andWhere(['d.name' => 'size'])
+      ->andWhere(['i.status' => \yii\easyii\modules\catalog\models\Item::STATUS_ON])
+      ->select(['d.value'])
+      ->column();
+
+    return array_unique($sizes);
+  }
+
   public function beforeSave($insert)
   {
     if (parent::beforeSave($insert)) {
@@ -93,6 +111,10 @@ class Collection extends \yii\easyii\components\ActiveRecord
         $this->formats = json_encode(array_values($formats), JSON_UNESCAPED_UNICODE);
       } elseif (empty($this->formats)) {
         $this->formats = '[]';
+      }
+
+      if ($insert && empty($this->time)) {
+        $this->time = time();
       }
 
       if (!$insert && $this->image != $this->oldAttributes['image'] && $this->oldAttributes['image']) {

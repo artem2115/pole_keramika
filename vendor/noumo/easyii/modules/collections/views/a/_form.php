@@ -5,7 +5,6 @@ use yii\easyii\helpers\Image;
 use yii\easyii\modules\catalog\models\Category;
 use yii\easyii\widgets\Redactor;
 use yii\easyii\widgets\SeoForm;
-use yii\easyii\widgets\TagsInput;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\ActiveForm;
@@ -46,9 +45,9 @@ $categoriesList = \yii\helpers\ArrayHelper::map($categories, 'category_id', 'tit
   ]
 ]) ?>
 
-<?= $form->field($model, 'formats')->widget(TagsInput::class, [
-  'options' => ['placeholder' => 'Введите формат и нажмите Enter (например: 25x40)']
-])->hint('Введите форматы плитки, каждый через Enter') ?>
+<? //= $form->field($model, 'formats')->widget(TagsInput::class, [
+  //'options' => ['placeholder' => 'Введите формат и нажмите Enter (например: 25x40)']
+//])->hint('Введите форматы плитки, каждый через Enter') ?>
 
 <?php if (IS_ROOT) : ?>
   <?= $form->field($model, 'slug') ?>

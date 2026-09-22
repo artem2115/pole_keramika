@@ -25,9 +25,11 @@ class Item extends \yii\easyii\components\ActiveRecord
       ['title', 'string', 'max' => 256],
       ['image', 'image'],
       ['description', 'safe'],
-      ['price', 'number'],
+      [['price', 'old_price'], 'number'],
       ['discount', 'integer', 'max' => 99],
-      [['status', 'category_id', 'available', 'time'], 'integer'],
+      ['discount', 'default', 'value' => 0],
+      [['status', 'category_id', 'available', 'time', 'collection_id'], 'integer'],
+      [['data'], 'safe'],
       ['time', 'default', 'value' => time()],
       ['slug', 'string', 'max' => 128],
       ['slug', 'unique'],
@@ -144,5 +146,11 @@ class Item extends \yii\easyii\components\ActiveRecord
   private function parseData()
   {
     $this->data = $this->data !== '' ? json_decode($this->data) : [];
+  }
+
+  public function getCollection()
+  {
+    return $this->hasOne(\yii\easyii\modules\collections\models\Collection::class,
+      ['collection_id' => 'collection_id']);
   }
 }
