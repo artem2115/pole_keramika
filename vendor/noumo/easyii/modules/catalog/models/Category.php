@@ -34,6 +34,16 @@ class Category extends \yii\easyii\components\CategoryModel
     }
   }
 
+  /**
+   * Коллекции этой категории
+   * @return \yii\db\ActiveQuery
+   */
+  public function getCollections()
+  {
+    return $this->hasMany(\yii\easyii\modules\collections\models\Collection::class,
+      ['category_id' => 'category_id']);
+  }
+
   public function afterSave($insert, $attributes)
   {
     parent::afterSave($insert, $attributes);

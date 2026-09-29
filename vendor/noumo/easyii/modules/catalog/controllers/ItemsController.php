@@ -73,6 +73,7 @@ class ItemsController extends Controller
         }
       }
     } else {
+      $model->category_id = $category->primaryKey;
       return $this->render('create', [
         'model' => $model,
         'category' => $category,

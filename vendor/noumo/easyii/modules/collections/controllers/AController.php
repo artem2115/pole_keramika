@@ -66,6 +66,9 @@ class AController extends Controller
         }
       }
     } else {
+      if (($categoryId = Yii::$app->request->get('category_id')) && !$model->category_id) {
+        $model->category_id = (int)$categoryId;
+      }
       return $this->render('create', [
         'model' => $model,
       ]);

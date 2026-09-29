@@ -82,6 +82,37 @@ class AController extends CategoryController
   {
     $this->view->params['submenu'] = true;
 
-    return parent::actionEdit($id);
+    $class = $this->categoryClass;
+
+    if (!($model = $class::findOne($id))) {
+      return $this->redirect(['/admin/' . $this->moduleName]);
+    }
+
+    if ($model->load(Yii::$app->request->post())) {
+      if (Yii::$app->request->isAjax) {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return ActiveForm::validate($model);
+      } else {
+        if (isset($_FILES) && $this->module->settings['categoryThumb']) {
+          $model->image = UploadedFile::getInstance($model, 'image');
+          if ($model->image && $model->validate(['image'])) {
+            $model->image = Image::upload($model->image, $this->moduleName);
+          } else {
+            $model->image = $model->oldAttributes['image'];
+          }
+        }
+        if ($model->save()) {
+          $this->flash('success', Yii::t('easyii', 'Category updated'));
+        } else {
+          $this->flash('error', Yii::t('easyii', 'Update error. {0}', $model->formatErrors()));
+        }
+        return $this->refresh();
+      }
+    } else {
+      // 👇 рендерим свои представления из модуля
+      return $this->render('@easyii/modules/catalog/views/a/edit', [
+        'model' => $model,
+      ]);
+    }
   }
 }
