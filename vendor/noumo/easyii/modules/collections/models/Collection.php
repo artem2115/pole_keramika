@@ -28,6 +28,7 @@ class Collection extends \yii\easyii\components\ActiveRecord
       [['title', 'category_id'], 'required'],
       [['title', 'short'], 'trim'],
       ['title', 'string', 'max' => 255],
+      ['short', 'string', 'max' => 1024],
       ['category_id', 'integer'],
       ['image', 'image'],
       [['description'], 'safe'],
@@ -82,7 +83,7 @@ class Collection extends \yii\easyii\components\ActiveRecord
   }
 
   /**
-   * Получить все форматы из товаров коллекции
+   * Все форматы (размеры) из товаров коллекции
    * @return array
    */
   public function getFormatsList()
@@ -94,15 +95,39 @@ class Collection extends \yii\easyii\components\ActiveRecord
       ->andWhere(['d.name' => 'size'])
       ->andWhere(['i.status' => \yii\easyii\modules\catalog\models\Item::STATUS_ON])
       ->select(['d.value'])
+      ->distinct()
       ->column();
 
-    return array_unique($sizes);
+    return array_filter($sizes);
+  }
+
+  /**
+   * Минимальная цена среди товаров коллекции
+   * @return float
+   */
+  public function getMinPrice()
+  {
+    return (float) \yii\easyii\modules\catalog\models\Item::find()
+      ->where(['collection_id' => $this->collection_id])
+      ->andWhere(['status' => \yii\easyii\modules\catalog\models\Item::STATUS_ON])
+      ->andWhere(['>', 'price', 0])
+      ->min('price');
   }
 
   public function beforeSave($insert)
   {
     if (parent::beforeSave($insert)) {
-      // Обработка форматов — TagsInput приходит как строка с запятыми или как массив
+      // Генерация short из description, если short не задан
+      if (empty($this->short) && !empty($this->description)) {
+        $cleanText = strip_tags($this->description);
+        $cleanText = html_entity_decode($cleanText, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $cleanText = preg_replace('/\s+/', ' ', $cleanText);
+        $cleanText = trim($cleanText);
+
+        $this->short = StringHelper::truncate($cleanText, 200, '…');
+      }
+
+      // Обработка форматов
       if (is_array($this->formats)) {
         $formats = array_filter(array_map('trim', $this->formats));
         $this->formats = json_encode(array_values($formats), JSON_UNESCAPED_UNICODE);
@@ -128,7 +153,6 @@ class Collection extends \yii\easyii\components\ActiveRecord
       return false;
     }
   }
-
   public function afterFind()
   {
     parent::afterFind();
@@ -156,5 +180,34 @@ class Collection extends \yii\easyii\components\ActiveRecord
     foreach ($this->getPhotos()->all() as $photo) {
       $photo->delete();
     }
+  }
+
+
+  /**
+   * Все изображения коллекции: главная image + photos
+   * @return array
+   */
+  public function getAllImages()
+  {
+    $images = [];
+
+    // Сначала главное изображение (если есть)
+    if (!empty($this->image)) {
+      $images[] = $this->image;
+    }
+
+    // Затем фото из галереи
+    foreach ($this->getPhotos()->all() as $photo) {
+      if (!empty($photo->image)) {
+        $images[] = $photo->image;
+      }
+    }
+
+    return $images;
+  }
+
+  public function seo($attribute, $default = '')
+  {
+    return !empty($this->seo->{$attribute}) ? $this->seo->{$attribute} : $default;
   }
 }

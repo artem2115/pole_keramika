@@ -731,4 +731,15 @@ $(function(){
     // .off, чтобы не навешивать обработчик повторно
     $checkbox.off('change.agree').on('change.agree', update);
   }
+
+  // Плавный скролл к элементу
+  $(document).on('click', '[data-scroll-to]', function(e) {
+    e.preventDefault();
+    var selector = $(this).data('scroll-to');
+    var $target = $(selector);
+
+    if ($target.length) {
+      $target[0].scrollIntoView({behavior: 'smooth', block: 'start'});
+    }
+  });
 });

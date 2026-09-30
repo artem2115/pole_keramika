@@ -23,15 +23,35 @@ class CollectionController extends Controller
       throw new NotFoundHttpException('Коллекция не найдена');
     }
 
+    // Товары коллекции
     $items = Item::find()
       ->where(['collection_id' => $collection->collection_id])
       ->andWhere(['status' => Item::STATUS_ON])
       ->orderBy(['time' => SORT_DESC])
       ->all();
 
+    // Один запрос — все нужные data для всех товаров
+    $itemIds = array_map(function($item) { return $item->item_id; }, $items);
+    $itemData = Item::getDataForItems($itemIds, ['size', 'unit']);
+
+    // Похожие коллекции из той же категории (кроме текущей)
+    $similarCollections = [];
+    if ($collection->category_id) {
+      $similarCollections = Collection::find()
+        ->where(['category_id' => $collection->category_id])
+        ->andWhere(['!=', 'collection_id', $collection->collection_id])
+        ->andWhere(['status' => Collection::STATUS_ON])
+        ->orderBy(['order_num' => SORT_ASC, 'title' => SORT_ASC])
+        ->limit(8)
+        ->all();
+    }
+
     return $this->render('view', [
       'collection' => $collection,
       'items' => $items,
+      'images' => $collection->getAllImages(),
+      'itemData' => $itemData,
+      'similarCollections' => $similarCollections,
     ]);
   }
 

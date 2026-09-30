@@ -35,7 +35,11 @@ $categoriesList = \yii\helpers\ArrayHelper::map($categories, 'category_id', 'tit
   <?php endif; ?>
   <?= $form->field($model, 'image')->fileInput() ?>
 <?php endif; ?>
-
+<?= $form->field($model, 'short')->textarea([
+  'rows' => 3,
+  'maxlength' => 1024,
+  'placeholder' => 'Короткое описание (до 200 символов). Если оставить пустым — сгенерируется из полного описания.'
+]) ?>
 <?= $form->field($model, 'description')->widget(Redactor::class, [
   'options' => [
     'minHeight' => 300,

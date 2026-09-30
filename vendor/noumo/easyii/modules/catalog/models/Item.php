@@ -153,4 +153,50 @@ class Item extends \yii\easyii\components\ActiveRecord
     return $this->hasOne(\yii\easyii\modules\collections\models\Collection::class,
       ['collection_id' => 'collection_id']);
   }
+
+  /**
+   * Получить значение поля из data
+   * @param string $name
+   * @return string|null
+   */
+  public function getDataValue($name)
+  {
+    $value = ItemData::find()
+      ->where(['item_id' => $this->item_id, 'name' => $name])
+      ->select(['value'])
+      ->scalar();
+
+    return $value ?: null;
+  }
+
+  /**
+   * Получить data для нескольких товаров одним запросом
+   * @param array $itemIds
+   * @param array $names — какие поля нужны (пусто = все)
+   * @return array — [item_id => [name => [values]]]
+   */
+  public static function getDataForItems($itemIds, $names = [])
+  {
+    if (empty($itemIds)) {
+      return [];
+    }
+
+    $query = ItemData::find()
+      ->where(['item_id' => $itemIds])
+      ->select(['item_id', 'name', 'value'])
+      ->asArray();
+
+    if (!empty($names)) {
+      $query->andWhere(['name' => $names]);
+    }
+
+    $rows = $query->all();
+    $result = [];
+
+    foreach ($rows as $row) {
+      $result[$row['item_id']][$row['name']][] = $row['value'];
+    }
+
+    return $result;
+  }
 }
