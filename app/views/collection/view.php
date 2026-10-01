@@ -11,7 +11,7 @@ use yii\helpers\Url;
 * @var array $itemData
 * @var \yii\easyii\modules\collections\models\Collection[] $similarCollections
 */
-
+$this->params['fancybox_asset'] = true;
 $hasGallery = count($images) > 1;
 
 $this->title = $collection->seo('title', $collection->title);
@@ -37,7 +37,7 @@ $this->title = $collection->seo('title', $collection->title);
       <figure class="sl-2 sl-2-for">
         <?php foreach ($images as $image): ?>
           <div class="sl-2-s">
-            <img src="<?= Image::thumb($image, 985, 697) ?>" alt="<?= Html::encode($collection->title) ?>">
+            <a href="<?= $image ?>" data-fancybox="ct" data-caption="<?= Html::encode($collection->title ?? '') ?>"><img src="<?= Image::thumb($image, 985, 697) ?>" alt="<?= Html::encode($collection->title) ?>"></a>
           </div>
         <?php endforeach; ?>
       </figure>
@@ -93,8 +93,6 @@ $this->title = $collection->seo('title', $collection->title);
       <i>
         <?php if ($collection->category->image): ?>
           <img src="<?= Image::thumb($collection->category->image, 131, 90) ?>" alt="">
-        <?php else: ?>
-          <img src="/img/131x90.png" alt="">
         <?php endif; ?>
       </i>
       <div class="b9-r">

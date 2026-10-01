@@ -761,15 +761,15 @@ input[type=checkbox] + var:hover, label:hover input[type=checkbox] + var{border-
 
 .sl-2{@extend %flex_important,%brad-8;align-items:center;flex:0 0 523px;overflow:hidden;order:2;border:1px solid $colorGray100;
   img{width:100%;}
-  &.sl-2-for{display:block !important;
+  &.sl-2-for{/*display:block !important;*/
     > .sl-2-s:not(:first-child){display:none}
   }
 }
 
-.sl-3-w{@extend %brad-4;align-self: flex-start;flex:0 0 64px;padding:8px;box-shadow: 0 10px 25px 0 #0000001A;background-color:$colorWhite}
+.sl-3-w{@extend %brad-4;align-self: flex-start;flex:0 0 64px;width:64px;padding:8px;box-shadow: 0 10px 25px 0 #0000001A;background-color:$colorWhite}
 .sl-3{width:100%;overflow:hidden;order:1;background-color:$colorWhite}
 .sl-3-nav{
-  .slick-list,.slick-track{display:flex !important;flex:1}
+  //.slick-list,.slick-track{display:flex !important;flex:1} //todo: отключено для слайдера в товаре
   .slick-arrow{border:0;background-color:transparent;width:100%;height:24px;text-indent:-999px;}
   .slick-prev{position:relative;
     &::after{@include angle-top(auto, calc(50% - 2px), 9px, $colorBrand500);left:calc(50% - 5px);}
@@ -792,6 +792,7 @@ input[type=checkbox] + var:hover, label:hover input[type=checkbox] + var{border-
 .b9{
   a{@extend %flex,%brad-4;align-items:center;text-decoration:none;border:1px solid $colorGray100;overflow:hidden;
     > i{flex:0 0 130px;}
+    &:hover{border-color:$colorGray200}
   }
   h6{font-size:rem(16px);color:$colorGray900;font-weight:$fwMedium-500}
   b{display:block;padding-top:7px;font-weight:$fwMedium-500;font-size:rem(14px);color:$colorBrand500;

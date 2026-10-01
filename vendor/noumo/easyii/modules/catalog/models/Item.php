@@ -199,4 +199,88 @@ class Item extends \yii\easyii\components\ActiveRecord
 
     return $result;
   }
+
+  /**
+   * Все изображения товара: главная image + photos
+   * @return array
+   */
+  public function getAllImages()
+  {
+    $images = [];
+
+    // Сначала главное изображение
+    if (!empty($this->image)) {
+      $images[] = $this->image;
+    }
+
+    // Затем фото из галереи
+    foreach ($this->getPhotos()->all() as $photo) {
+      if (!empty($photo->image)) {
+        $images[] = $photo->image;
+      }
+    }
+
+    return $images;
+  }
+
+  /**
+   * Характеристики товара для таблицы (без boolean-флагов)
+   * @return array — [title => value, ...]
+   */
+  public function getCharacteristics()
+  {
+    $result = [];
+
+    if (empty($this->category->fields)) {
+      return $result;
+    }
+
+    // Собираем data одним запросом
+    $rows = ItemData::find()
+      ->where(['item_id' => $this->item_id])
+      ->select(['name', 'value'])
+      ->asArray()
+      ->all();
+
+    // Группируем по name
+    $dataMap = [];
+    foreach ($rows as $row) {
+      $dataMap[$row['name']][] = $row['value'];
+    }
+
+    // Проходим по полям категории в нужном порядке
+    foreach ($this->category->fields as $field) {
+      // Пропускаем boolean-флаги
+      if ($field->type === 'boolean') {
+        continue;
+      }
+
+      $values = $dataMap[$field->name] ?? [];
+      if (empty($values)) {
+        continue;
+      }
+
+      // Для color убираем HEX после двоеточия
+      if ($field->name === 'color') {
+        $values = array_map(function($v) {
+          return explode(':', $v, 2)[0];
+        }, $values);
+      }
+
+      // checkbox — объединяем через запятую
+      if (is_array($values) && count($values) > 1) {
+        $result[$field->title] = implode(', ', $values);
+      } else {
+        $result[$field->title] = reset($values);
+      }
+    }
+
+    return $result;
+  }
+
+  public function seo($attribute, $default = '')
+  {
+    return !empty($this->seo->{$attribute}) ? $this->seo->{$attribute} : $default;
+  }
+
 }

@@ -92,13 +92,16 @@ class CatalogController extends Controller
       );
     }
 
-    return $this->render('item', [
+    return $this->render('/catalog/item', [
       'category' => $category,
+      'collection' => null,
       'item' => $item,
+      'images' => $item->getAllImages(),
+      'characteristics' => $item->getCharacteristics(),
       'collectionItems' => [],
+      'itemData' => [],
     ]);
   }
-
   /**
    * Фильтры (пока заготовка — наполним в шаге B)
    */

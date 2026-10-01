@@ -88,11 +88,18 @@ class CollectionController extends Controller
       ->limit(8)
       ->all();
 
+    // Один запрос — data для всех товаров блока "другие товары"
+    $itemIds = array_map(function($i) { return $i->item_id; }, $collectionItems);
+    $itemData = Item::getDataForItems($itemIds, ['unit']);
+
     return $this->render('/catalog/item', [
       'category' => $collection->category,
-      'item' => $item,
       'collection' => $collection,
+      'item' => $item,
+      'images' => $item->getAllImages(),
+      'characteristics' => $item->getCharacteristics(),
       'collectionItems' => $collectionItems,
+      'itemData' => $itemData,
     ]);
   }
 }
