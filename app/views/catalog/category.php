@@ -116,7 +116,7 @@ $activeBrand = $activeBrand ?? [];
         </div>
 
         <?php foreach ($filterValues as $filter): ?>
-          <?php if ($filter['field']->name === 'purpose') continue; // Назначение выводим как табы ?>
+          <?php if ($filter['field']->name === 'purpose') continue; ?>
           <div class="sb1">
             <div class="sb1-ttl">
               <b><?= Html::encode($filter['field']->title) ?></b>
@@ -124,25 +124,22 @@ $activeBrand = $activeBrand ?? [];
             </div>
             <div class="sb1-b">
               <ul>
-                <?php foreach ($filter['values'] as $value): ?>
+                <?php foreach ($filter['values'] as $item): ?>
                   <?php
-                  $label = $value;
-                  $hex = '';
-                  if ($filter['field']->name === 'color' && strpos($value, ':') !== false) {
-                    list($label, $hex) = explode(':', $value, 2);
-                  }
-                  $checked = in_array($value, $activeFilters[$filter['field']->name] ?? []);
+                  $slug = $item['slug'];
+                  $checked = in_array($slug, $activeFilters[$filter['field']->name] ?? []);
                   ?>
                   <li>
                     <label>
                       <input type="checkbox"
                              name="<?= Html::encode($filter['field']->name) ?>[]"
-                             value="<?= Html::encode($value) ?>"
+                             value="<?= Html::encode($slug) ?>"
+                             data-slug="<?= Html::encode($slug) ?>"
                         <?= $checked ? 'checked' : '' ?>>
-                      <?php if ($hex): ?>
-                        <i class="sb-clr" style="background:<?= Html::encode($hex) ?>"></i>
+                      <?php if ($item['hex']): ?>
+                        <i class="sb-clr" style="background:<?= Html::encode($item['hex']) ?>"></i>
                       <?php endif; ?>
-                      <span><?= Html::encode($label) ?></span>
+                      <span><?= Html::encode($item['label']) ?></span>
                     </label>
                   </li>
                 <?php endforeach; ?>
@@ -156,20 +153,17 @@ $activeBrand = $activeBrand ?? [];
 
         <?php if (!empty($brandsMap)): ?>
           <div class="sb1">
-            <div class="sb1-ttl">
-              <b>Бренд</b>
-              <i></i>
-            </div>
+            <div class="sb1-ttl"><b>Бренд</b><i></i></div>
             <div class="sb1-b">
               <ul>
-                <?php foreach ($brandsMap as $brand => $collectionIds): ?>
+                <?php foreach ($brandsMap as $slug => $data): ?>
                   <li>
                     <label>
                       <input type="checkbox"
                              name="brand[]"
-                             value="<?= Html::encode($brand) ?>"
-                        <?= in_array($brand, $activeBrand) ? 'checked' : '' ?>>
-                      <span><?= Html::encode($brand) ?></span>
+                             value="<?= Html::encode($slug) ?>"
+                        <?= in_array($slug, $activeBrand) ? 'checked' : '' ?>>
+                      <span><?= Html::encode($data['value']) ?></span>
                     </label>
                   </li>
                 <?php endforeach; ?>
@@ -205,10 +199,10 @@ $activeBrand = $activeBrand ?? [];
       ?>
       <?php if ($purposeFilter): ?>
         <ul class="tabs2" data-filter-name="purpose">
-          <?php foreach ($purposeFilter['values'] as $value): ?>
-            <?php $checked = in_array($value, $activeFilters['purpose'] ?? []); ?>
-            <li class="<?= $checked ? 'active' : '' ?>" data-value="<?= Html::encode($value) ?>">
-              <?= Html::encode($value) ?>
+          <?php foreach ($purposeFilter['values'] as $item): ?>
+            <?php $checked = in_array($item['slug'], $activeFilters['purpose'] ?? []); ?>
+            <li class="<?= $checked ? 'active' : '' ?>" data-value="<?= Html::encode($item['slug']) ?>">
+              <?= Html::encode($item['label']) ?>
             </li>
           <?php endforeach; ?>
         </ul>
@@ -226,10 +220,10 @@ $activeBrand = $activeBrand ?? [];
       ?>
       <?php if ($sizeFilter): ?>
         <ul class="tabs2 tabs2-2" data-filter-name="size">
-          <?php foreach ($sizeFilter['values'] as $value): ?>
-            <?php $checked = in_array($value, $activeFilters['size'] ?? []); ?>
-            <li class="<?= $checked ? 'active' : '' ?>" data-value="<?= Html::encode($value) ?>">
-              <?= Html::encode($value) ?>
+          <?php foreach ($sizeFilter['values'] as $item): ?>
+            <?php $checked = in_array($item['slug'], $activeFilters['size'] ?? []); ?>
+            <li class="<?= $checked ? 'active' : '' ?>" data-value="<?= Html::encode($item['slug']) ?>">
+              <?= Html::encode($item['label']) ?>
             </li>
           <?php endforeach; ?>
         </ul>

@@ -3,6 +3,7 @@ namespace app\controllers;
 
 use app\assets\CatalogAsset;
 use Yii;
+use yii\easyii\helpers\Translit;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\data\ActiveDataProvider;
@@ -99,16 +100,15 @@ class CatalogController extends Controller
     $category = $this->findCategory($category_slug);
 
     // Получаем все коллекции категории
-    $collectionsQuery = Collection::find()
+    $allCollections = Collection::find()
       ->where(['category_id' => $category->category_id])
-      ->andWhere(['status' => Collection::STATUS_ON]);
+      ->andWhere(['status' => Collection::STATUS_ON])
+      ->all();
 
-    // Собираем список коллекций для дальнейших манипуляций
-    $allCollections = $collectionsQuery->all();
     $collectionIds = array_map(function($c) { return $c->collection_id; }, $allCollections);
 
-    // Собираем все бренды, которые встречаются в товарах этих коллекций
-    $brandsMap = []; // [brand => [collection_ids]]
+    // Собираем бренды из товаров коллекций: [slug => ['value' => оригинал, 'collection_ids' => [...]]]
+    $brandsMap = [];
     if (!empty($collectionIds)) {
       $rows = ItemData::find()
         ->alias('d')
@@ -122,29 +122,37 @@ class CatalogController extends Controller
 
       foreach ($rows as $row) {
         $brand = $row['value'];
-        if (!isset($brandsMap[$brand])) {
-          $brandsMap[$brand] = [];
-        }
-        $brandsMap[$brand][] = (int)$row['collection_id'];
-      }
-    }
+        $slug = Translit::slug($brand);
 
-    // Сортируем бренды по алфавиту
-    ksort($brandsMap);
+        if (!isset($brandsMap[$slug])) {
+          $brandsMap[$slug] = [
+            'value' => $brand,
+            'collection_ids' => [],
+          ];
+        }
+        $brandsMap[$slug]['collection_ids'][] = (int)$row['collection_id'];
+      }
+
+      // Сортируем по оригинальному значению (по алфавиту)
+      uasort($brandsMap, function($a, $b) {
+        return strcmp($a['value'], $b['value']);
+      });
+    }
 
     // Применяем фильтр по бренду из GET
-    $activeBrand = Yii::$app->request->get('brand', []);
-    if (!is_array($activeBrand)) {
-      $activeBrand = [$activeBrand];
+    $activeBrand = Yii::$app->request->get('brand', '');
+    if (is_array($activeBrand)) {
+      $activeBrand = array_filter($activeBrand);
+    } else {
+      $activeBrand = array_filter(array_map('trim', explode(',', (string)$activeBrand)));
     }
-    $activeBrand = array_filter($activeBrand);
 
     if (!empty($activeBrand)) {
       // Находим коллекции, в которых есть хотя бы один из выбранных брендов
       $matchedCollectionIds = [];
-      foreach ($activeBrand as $brand) {
-        if (!empty($brandsMap[$brand])) {
-          $matchedCollectionIds = array_merge($matchedCollectionIds, $brandsMap[$brand]);
+      foreach ($activeBrand as $slug) {
+        if (!empty($brandsMap[$slug]['collection_ids'])) {
+          $matchedCollectionIds = array_merge($matchedCollectionIds, $brandsMap[$slug]['collection_ids']);
         }
       }
       $matchedCollectionIds = array_unique($matchedCollectionIds);
@@ -197,7 +205,9 @@ class CatalogController extends Controller
       'activeFilters' => [],
       'view' => 'kollekcii',
     ]);
-  }  /**
+  }
+
+  /**
    * Товар без коллекции: /catalog/{category_slug}/{item_slug}/
    */
   public function actionItemNoCollection($category_slug, $item_slug)
@@ -257,7 +267,6 @@ class CatalogController extends Controller
       return $filters;
     }
 
-    // Собираем данные по всем товарам категории одним запросом
     $items = Item::find()
       ->where(['category_id' => $category->category_id])
       ->andWhere(['status' => Item::STATUS_ON])
@@ -274,13 +283,11 @@ class CatalogController extends Controller
       ->asArray()
       ->all();
 
-    // Группируем значения по имени поля
     $valuesMap = [];
     foreach ($rows as $row) {
       $valuesMap[$row['name']][] = $row['value'];
     }
 
-    // Проходим по полям категории, оставляем только нужные для фильтра
     $filterFields = ['brand', 'color', 'purpose', 'size', 'surface'];
 
     foreach ($category->fields as $field) {
@@ -296,15 +303,32 @@ class CatalogController extends Controller
       $values = array_unique($values);
       sort($values);
 
+      // Готовим значения с slug
+      $items_with_slug = [];
+      foreach ($values as $value) {
+        $label = $value;
+        $hex = '';
+
+        if ($field->name === 'color' && strpos($value, ':') !== false) {
+          list($label, $hex) = explode(':', $value, 2);
+        }
+
+        $items_with_slug[] = [
+          'value' => $value,      // оригинал (для данных)
+          'label' => $label,      // отображаемое
+          'slug' => Translit::slug($label), // для URL
+          'hex' => $hex,
+        ];
+      }
+
       $filters[] = [
         'field' => $field,
-        'values' => $values,
+        'values' => $items_with_slug,
       ];
     }
 
     return $filters;
   }
-
   /**
    * Применить фильтры из GET к запросу
    * @return array — активные фильтры
@@ -312,8 +336,9 @@ class CatalogController extends Controller
   private function applyFilters(&$query, $category)
   {
     $active = [];
+    $slugMap = $this->getSlugMap($category);
 
-    // Цена от/до
+    // Цена
     $priceFrom = Yii::$app->request->get('price_from');
     $priceTo = Yii::$app->request->get('price_to');
     if ($priceFrom !== null && $priceFrom !== '') {
@@ -336,24 +361,83 @@ class CatalogController extends Controller
       $active['is_hit'] = 1;
     }
 
-    // Фильтры по ItemData (brand, color, purpose, size, surface)
+    // Фильтры по ItemData
     $filterNames = ['brand', 'color', 'purpose', 'size', 'surface'];
     foreach ($filterNames as $name) {
-      $values = Yii::$app->request->get($name, []);
-      if (!is_array($values) || empty($values)) {
+      $raw = Yii::$app->request->get($name, '');
+
+      // Парсим: строка через запятую ИЛИ массив (для обратной совместимости)
+      if (is_array($raw)) {
+        $slugs = array_filter($raw);
+      } else {
+        $slugs = array_filter(array_map('trim', explode(',', (string)$raw)));
+      }
+
+      if (empty($slugs)) {
+        continue;
+      }
+
+      // Преобразуем slug обратно в оригинальные значения
+      $originalValues = [];
+      foreach ($slugs as $slug) {
+        if (isset($slugMap[$name][$slug])) {
+          $originalValues[] = $slugMap[$name][$slug];
+        } else {
+          // Если в карте нет — используем как есть (обратная совместимость)
+          $originalValues[] = $slug;
+        }
+      }
+
+      if (empty($originalValues)) {
         continue;
       }
 
       $itemIds = ItemData::find()
-        ->where(['name' => $name, 'value' => $values])
+        ->where(['name' => $name, 'value' => $originalValues])
         ->select(['item_id'])
         ->distinct()
         ->column();
 
       $query->andWhere(['item_id' => $itemIds]);
-      $active[$name] = $values;
+
+      // Возвращаем активные фильтры в виде slug'ов — для сравнения во вьюхе
+      $active[$name] = $slugs;
     }
 
     return $active;
+  }
+
+  /**
+   * Карта slug => value для всех полей категории
+   * @return array ['brand' => ['cersanit' => 'Cersanit', ...], 'size' => [...], ...]
+   */
+  private function getSlugMap($category)
+  {
+    $map = [];
+
+    if (empty($category->fields)) {
+      return $map;
+    }
+
+    foreach ($category->fields as $field) {
+      if (empty($field->options)) {
+        continue;
+      }
+
+      $map[$field->name] = [];
+
+      foreach ($field->options as $option) {
+        // Для color — обрезаем HEX
+        $label = $option;
+        if ($field->name === 'color' && strpos($option, ':') !== false) {
+          $label = explode(':', $option, 2)[0];
+        }
+
+        $slug = Translit::slug($label);
+        $map[$field->name][$slug] = $option; // храним ОРИГИНАЛ для запроса
+      }
+    }
+
+    return $map;
   }
 }
