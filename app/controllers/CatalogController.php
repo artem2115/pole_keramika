@@ -82,6 +82,14 @@ class CatalogController extends Controller
       ]);
     }
 
+    $priceRange = Item::find()
+      ->where(['category_id' => $category->category_id])
+      ->andWhere(['status' => Item::STATUS_ON])
+      ->andWhere(['>', 'price', 0])
+      ->select(['min_price' => 'MIN(price)', 'max_price' => 'MAX(price)'])
+      ->asArray()
+      ->one();
+
     return $this->render('category', [
       'category' => $category,
       'dataProvider' => $dataProvider,
@@ -90,6 +98,8 @@ class CatalogController extends Controller
       'itemData' => $itemData,
       'allCategories' => $allCategories,
       'view' => 'tovary',
+      'priceMin' => $priceRange ? (float)$priceRange['min_price'] : 0,
+      'priceMax' => $priceRange ? (float)$priceRange['max_price'] : 0,
     ]);
   }
   /**

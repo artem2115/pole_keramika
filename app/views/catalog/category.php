@@ -6,6 +6,8 @@
  * @var array $filterValues
  * @var array $activeFilters
  * @var array $itemData
+ * @var float $priceMin
+ * @var float $priceMax
  * @var \yii\easyii\modules\catalog\models\Category[] $allCategories
  * @var \yii\easyii\modules\collections\models\Collection[]|null $collections
  * @var array|null $collectionPrices
@@ -88,6 +90,11 @@ $activeBrand = $activeBrand ?? [];
       <?php if ($view === 'tovary'): ?>
         <?php // ================= ФИЛЬТРЫ ТОВАРОВ ================= ?>
 
+        <?php
+// Если активного фильтра нет — показываем мин/макс
+        $priceFromValue = $activeFilters['price_from'] ?? ($priceMin > 0 ? (int)$priceMin : '');
+        $priceToValue = $activeFilters['price_to'] ?? ($priceMax > 0 ? (int)$priceMax : '');
+        ?>
         <div class="sb1">
           <div class="sb1-ttl">
             <b>Цена, ₽</b>
@@ -96,12 +103,20 @@ $activeBrand = $activeBrand ?? [];
             <div class="price-sel">
               <div class="ps">
                 <i>от</i>
-                <input type="text" name="price_from" value="<?= Html::encode($activeFilters['price_from'] ?? '') ?>">
+                <input type="text"
+                       name="price_from"
+                       value="<?= Html::encode($priceFromValue) ?>"
+                       data-min="<?= (int)$priceMin ?>"
+                       data-max="<?= (int)$priceMax ?>">
               </div>
               <div class="ps-mdash">&mdash;</div>
               <div class="ps">
                 <i>до</i>
-                <input type="text" name="price_to" value="<?= Html::encode($activeFilters['price_to'] ?? '') ?>">
+                <input type="text"
+                       name="price_to"
+                       value="<?= Html::encode($priceToValue) ?>"
+                       data-min="<?= (int)$priceMin ?>"
+                       data-max="<?= (int)$priceMax ?>">
               </div>
             </div>
           </div>
