@@ -351,8 +351,11 @@ input{color:$colorGray900}
 .ttl{@extend %flex_sbc;padding:20px 0 10px;}
 
 .tabs{@extend %flex_sbc,%brad-4;background-color:$colorGray50;font-weight:500;gap:8px;padding:8px;margin:8px 0;
-  li{@extend %transition-02,%brad-4;flex:1;border-radius:4px;text-align:center;padding:12px 12px 10px 12px;
-    &.active{background-color:$colorOrange;color:$colorWhite}
+  li{@extend %transition-02;flex:1;text-align:center;
+    a{@extend %flex,%brad-4;justify-content:center;padding:12px 12px 10px 12px;flex:1;text-decoration:none;color:$colorText}
+    &.active{
+      a{background-color:$colorOrange;color:$colorWhite;}
+    }
     &:not(.active){cursor:pointer;
       &:hover{background-color:$colorBrand50}
     }
@@ -539,8 +542,9 @@ input{color:$colorGray900}
   }
 }
 
-.tabs2{font-weight:$fwMedium-500;margin-top:10px;
-  li{display:inline-block;border-radius:100px;margin:5px 5px 5px 0;cursor:pointer;overflow:hidden;
+.tabs2{font-weight:$fwMedium-500;margin-top:10px;//todo: проверить
+  li{@extend %transition-02;display:inline-block;background-color:$colorGray25;border-radius:100px;margin:5px 5px 5px 0;cursor:pointer;overflow:hidden;padding:16px 24px;
+    &:hover{background-color:$colorGray50}
     a{display:inline-block;padding:16px 24px;background-color:$colorGray25;text-decoration:none;color:$colorGray900;
       &:hover{background-color:$colorGray50}
     }
@@ -1025,10 +1029,13 @@ body.openModal{
 }
 
 
-.f1{width:100%;}
-input[type=text]{@extend %brad-4;border:1px solid $colorGray200;padding:12px 16px 11px;color:$colorGray900;font-size:rem(15px);width:100%;}
+.f1{width:100%;
+  input[type=text]{@extend %brad-4;border:1px solid $colorGray200;padding:12px 16px 11px;color:$colorGray900;font-size:rem(15px);width:100%;}
+  input[type="text"]::placeholder {color: $colorGray300;opacity: 1;}
+}
+
 .control-label{padding-bottom:4px;display:block}
-input[type="text"]::placeholder {color: $colorGray300;opacity: 1;}
+
 
 /*@media*/
 @media (max-width:1301px){

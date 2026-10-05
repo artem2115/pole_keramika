@@ -74,4 +74,9 @@ class Category extends \yii\easyii\components\CategoryModel
   {
     $this->fields = $this->fields !== '' ? json_decode($this->fields) : [];
   }
+
+  public function seo($attribute, $default = '')
+  {
+    return !empty($this->seo->{$attribute}) ? $this->seo->{$attribute} : $default;
+  }
 }

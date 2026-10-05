@@ -163,7 +163,7 @@ $(function(){
     delete document.body.dataset.position;
   }
 
-  $('input[type="checkbox"]:not(#availability)').after('<var></var>');
+  $('input[type="checkbox"]:not(#availability)').not('.switch input[type="checkbox"]').after('<var></var>');
 
   if(window.innerWidth < 1166){
     header.addClass('out');
