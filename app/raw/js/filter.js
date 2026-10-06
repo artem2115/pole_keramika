@@ -9,85 +9,150 @@
     if (!$content.length || !$sidebar.length) return;
 
     // ============================================================
-    // Собираем параметры фильтров в массив {name, value}
+    // Утилиты
     // ============================================================
+
+    var isMobile = function() {
+      return window.innerWidth < 961;
+    };
+
+    var getFilterRoot = function() {
+      if (isMobile()) {
+        var $appB = $('.f-app-b');
+        if ($appB.length) return $appB;
+      }
+      return $sidebar;
+    };
+
     var collectFilters = function() {
       var params = [];
+      var $root = getFilterRoot();
 
       // Цена
-      var priceFrom = $sidebar.find('[name="price_from"]').val();
-      var priceTo = $sidebar.find('[name="price_to"]').val();
-      if (priceFrom) params.push({name: 'price_from', value: priceFrom});
-      if (priceTo) params.push({name: 'price_to', value: priceTo});
+      var $priceFrom = $root.find('[name="price_from"]').first();
+      var $priceTo = $root.find('[name="price_to"]').first();
+      var priceFrom = $priceFrom.val();
+      var priceTo = $priceTo.val();
+      var defaultMin = String($priceFrom.data('min'));
+      var defaultMax = String($priceTo.data('max'));
+
+      if (priceFrom && String(priceFrom) !== defaultMin) {
+        params.push({name: 'price_from', value: priceFrom});
+      }
+      if (priceTo && String(priceTo) !== defaultMax) {
+        params.push({name: 'price_to', value: priceTo});
+      }
 
       // Хит
-      if ($sidebar.find('[name="is_hit"]').is(':checked')) {
+      if ($root.find('[name="is_hit"]').is(':checked')) {
         params.push({name: 'is_hit', value: 1});
       }
 
-      // Чекбоксы (кроме is_hit)
-      $sidebar.find('input[type="checkbox"]:checked').each(function() {
-        var name = $(this).attr('name');
+      // Чекбоксы
+      $root.find('input[type="checkbox"]:checked').each(function() {
+        var name = this.name;
         if (name === 'is_hit') return;
-        params.push({name: name, value: $(this).val()});
-      });
-
-      // Табы (purpose, size) — значения уже slug
-      $content.find('.tabs2').each(function() {
-        var $tabs = $(this);
-        var name = $tabs.data('filter-name');
-        if (!name) return;
-
-        $tabs.find('li.active').each(function() {
-          params.push({
-            name: name + '[]',
-            value: $(this).data('value')
-          });
-        });
+        params.push({name: name, value: this.value});
       });
 
       return params;
     };
 
-    // ============================================================
-    // Сборка query string с группировкой значений: key=v1,v2&key2=v3
-    // ============================================================
     var buildQueryString = function(params) {
       var grouped = {};
 
       params.forEach(function(p) {
         var name = p.name.replace('[]', '');
-        if (!grouped[name]) grouped[name] = [];
-        grouped[name].push(p.value);
+        (grouped[name] = grouped[name] || []).push(p.value);
       });
 
-      var parts = [];
-      Object.keys(grouped).forEach(function(key) {
-        parts.push(key + '=' + grouped[key].join(','));
-      });
+      return Object.keys(grouped).map(function(key) {
+        return key + '=' + grouped[key].join(',');
+      }).join('&');
+    };
 
-      return parts.join('&');
+    // Сформировать URL: путь + query (если есть)
+    var buildUrl = function(params) {
+      var queryString = params.length ? buildQueryString(params) : '';
+      return window.location.pathname + (queryString ? '?' + queryString : '');
     };
 
     // ============================================================
-    // Вкладка "Товары" — AJAX-фильтрация
+    // Вкладка "Товары" — AJAX-фильтрация, пагинация, синхронизация табов
     // ============================================================
     var isTovary = $('#products-container').length > 0;
     if (isTovary) {
       var pendingUpdate = null;
       var isUpdating = false;
+      var hasChanges = false;
+      var initialState = null;
 
-      var updateProducts = function() {
+      var getFilterState = function() {
+        var $root = getFilterRoot();
+        var state = {
+          price_from: $root.find('[name="price_from"]').first().val() || '',
+          price_to: $root.find('[name="price_to"]').first().val() || '',
+          is_hit: $root.find('[name="is_hit"]').is(':checked') ? '1' : '',
+          checkboxes: []
+        };
+
+        $root.find('input[type="checkbox"]:checked').each(function() {
+          if (this.name === 'is_hit') return;
+          state.checkboxes.push(this.name + ':' + this.value);
+        });
+        state.checkboxes.sort();
+
+        return JSON.stringify(state);
+      };
+
+      var updateButtonState = function() {
+        if (!initialState) {
+          hasChanges = false;
+          $('#filter-mobile-btn').text('Закрыть').removeClass('has-changes');
+          return;
+        }
+
+        var changed = getFilterState() !== initialState;
+
+        if (changed !== hasChanges) {
+          hasChanges = changed;
+          $('#filter-mobile-btn')
+            .text(changed ? 'Применить' : 'Закрыть')
+            .toggleClass('has-changes', changed);
+        }
+      };
+
+      var resetChanged = function() {
+        hasChanges = false;
+        initialState = getFilterState();
+        $('#filter-mobile-btn').text('Закрыть').removeClass('has-changes');
+      };
+
+      // Синхронизация табов с чекбоксами
+      var syncTabsFromCheckboxes = function() {
+        var $root = getFilterRoot();
+
+        $content.find('.tabs2').each(function() {
+          var $tabs = $(this);
+          var name = $tabs.data('filter-name');
+          if (!name) return;
+
+          $tabs.find('li').each(function() {
+            var $li = $(this);
+            var $checkbox = $root.find('input[name="' + name + '[]"][value="' + $li.data('value') + '"]');
+            $li.toggleClass('active', $checkbox.is(':checked'));
+          });
+        });
+      };
+
+      var loadProducts = function(url) {
         if (isUpdating) return;
         isUpdating = true;
 
-        var params = collectFilters();
-        var queryString = buildQueryString(params);
-        var ajaxUrl = window.location.pathname +
-          (queryString ? '?' + queryString + '&ajax=1' : '?ajax=1');
+        var sep = url.indexOf('?') !== -1 ? '&' : '?';
 
         $.ajax({
-          url: ajaxUrl,
+          url: url + sep + 'ajax=1',
           dataType: 'html',
           success: function(html) {
             $('#products-container').html(html);
@@ -100,10 +165,11 @@
           }
         });
 
-        // Обновляем URL без ajax=1
-        var newUrl = window.location.pathname +
-          (queryString ? '?' + queryString : '');
-        window.history.replaceState({}, '', newUrl);
+        window.history.replaceState({}, '', url);
+      };
+
+      var updateProducts = function() {
+        loadProducts(buildUrl(collectFilters()));
       };
 
       var scheduleUpdate = function() {
@@ -111,37 +177,83 @@
         pendingUpdate = setTimeout(updateProducts, 150);
       };
 
-      // Цена — по blur
-      $sidebar.on('blur', '[name="price_from"], [name="price_to"]', scheduleUpdate);
+      var onFilterChange = function() {
+        isMobile() ? updateButtonState() : scheduleUpdate();
+      };
 
-      // Хит — по change
-      $sidebar.on('change', '[name="is_hit"]', scheduleUpdate);
+      // --- Обработчики ---
 
-      // Чекбоксы фильтров — по change
-      $sidebar.on('change', 'input[type="checkbox"]:not([name="is_hit"])', scheduleUpdate);
+      $(document).on('blur', 'input[name="price_from"], input[name="price_to"]', onFilterChange);
+      $(document).on('change', 'input[name="is_hit"]', onFilterChange);
 
-      // Табы — по клику (toggle + отложенный вызов)
-      $content.on('click', '.tabs2 li', function() {
-        $(this).toggleClass('active');
-        scheduleUpdate();
+      $(document).on('change', 'input[type="checkbox"][name$="[]"]', function() {
+        syncTabsFromCheckboxes();
+        onFilterChange();
       });
+
+      // Клик по табу → переключаем чекбокс
+      $(document).on('click', '.tabs2 li', function() {
+        var $li = $(this);
+        var name = $li.closest('.tabs2').data('filter-name');
+        if (!name) return;
+
+        var $checkbox = getFilterRoot().find('input[name="' + name + '[]"][value="' + $li.data('value') + '"]');
+        if ($checkbox.length) {
+          $checkbox.prop('checked', !$checkbox.prop('checked')).trigger('change');
+        }
+      });
+
+      // Пагинация через AJAX
+      $(document).on('click', '#products-container .pgn a', function(e) {
+        e.preventDefault();
+        var href = this.getAttribute('href');
+        if (href) loadProducts(href);
+      });
+
+      // Мобильная модалка
+      var closeMobileFilter = function() {
+        $('body').removeClass('f-open');
+        $('.fs-1').removeClass('active');
+        $('.f-app').removeClass('active');
+      };
+
+      $(document).on('click', '#filter-mobile-btn', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+
+        if ($btn.hasClass('has-changes')) {
+          updateProducts();
+          resetChanged();
+        }
+        closeMobileFilter();
+      });
+
+      $(document).on('click', '.fs-1', function() {
+        initialState = getFilterState();
+        hasChanges = false;
+        $('#filter-mobile-btn').text('Закрыть').removeClass('has-changes');
+      });
+
+      // Инициализация
+      syncTabsFromCheckboxes();
     }
 
     // ============================================================
     // Вкладка "Коллекции" — фильтр по бренду с перезагрузкой
     // ============================================================
-    var $brandCheckboxes = $sidebar.find('input[name="brand[]"]');
-    if ($brandCheckboxes.length) {
-      $sidebar.on('change', 'input[name="brand[]"]', function() {
+    if ($sidebar.find('input[name="brand[]"]').length) {
+      $(document).on('change', 'input[name="brand[]"]', function() {
+        // На вкладке "Товары" работает AJAX — редирект не нужен
+        if ($('#products-container').length) return;
+
         var slugs = [];
 
         $sidebar.find('input[name="brand[]"]:checked').each(function() {
-          slugs.push($(this).val());
+          slugs.push(this.value);
         });
 
         var queryString = slugs.length ? 'brand=' + slugs.join(',') : '';
-        var newUrl = window.location.pathname + (queryString ? '?' + queryString : '');
-        window.location.href = newUrl;
+        window.location.href = window.location.pathname + (queryString ? '?' + queryString : '');
       });
     }
 

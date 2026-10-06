@@ -176,8 +176,11 @@ $itemUnit = $itemData[$item->item_id]['unit'][0] ?? $item->getDataValue('unit');
 <?php endif; ?>
 
 <?php if ($item->description): ?>
-  <article>
+  <article class="item-description">
     <h3>Описание товара</h3>
-    <?= $item->description ?>
+    <div class="item-description-body">
+      <?= $item->description ?>
+    </div>
+    <div class="more"><span>Развернуть описание</span></div>
   </article>
 <?php endif; ?>

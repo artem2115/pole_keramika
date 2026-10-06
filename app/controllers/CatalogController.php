@@ -40,33 +40,33 @@ class CatalogController extends Controller
   /**
    * Страница категории с товарами: /catalog/{category}/tovary/
    */
-  public function actionCategory($category_slug)
+  public function actionCategory($category_slug, $page = null)
   {
     CatalogAsset::register($this->view);
     $category = $this->findCategory($category_slug);
 
-    // Запрос товаров
     $query = Item::find()
       ->where(['category_id' => $category->category_id])
       ->andWhere(['status' => Item::STATUS_ON])
       ->orderBy(['time' => SORT_DESC]);
 
-    // Применяем фильтры из GET
     $activeFilters = $this->applyFilters($query, $category);
 
     $dataProvider = new ActiveDataProvider([
       'query' => $query,
-      'pagination' => ['pageSize' => 12],
+      'pagination' => [
+        'pageSize' => 12,
+        'page' => $page ? ((int)$page - 1) : 0,
+        'route' => '/catalog/' . $category_slug . '/tovary',
+        'params' => [],
+      ],
     ]);
 
-    // Значения для сайдбара
     $filterValues = $this->getFilterValues($category);
 
-    // Единицы измерения для товаров — одним запросом
     $itemIds = array_map(function($i) { return $i->item_id; }, $dataProvider->models);
     $itemData = Item::getDataForItems($itemIds, ['unit', 'size']);
 
-    // Все категории для сайдбара
     $allCategories = Category::find()
       ->where(['status' => Category::STATUS_ON])
       ->orderBy(['order_num' => SORT_ASC, 'title' => SORT_ASC])

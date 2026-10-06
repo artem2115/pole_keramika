@@ -196,7 +196,11 @@ $activeBrand = $activeBrand ?? [];
       <div class="f-str">
         <div class="fs-1"><svg><use xlink:href="#filter"></use></svg> <span>Фильтр</span></div>
       </div>
-      <div class="f-app"><div class="f-app-b"></div></div>
+      <div class="f-app"><div class="f-app-b"></div>
+        <div class="f-app-footer">
+          <button type="button" class="filter-submit-btn" id="filter-mobile-btn">Закрыть</button>
+        </div>
+      </div>
     </div>
 
     <?php if ($view === 'tovary'): ?>
@@ -221,10 +225,7 @@ $activeBrand = $activeBrand ?? [];
             </li>
           <?php endforeach; ?>
         </ul>
-      <?php endif; ?>
-
-      <?php
-      // Размеры для табов
+      <?php endif;
       $sizeFilter = null;
       foreach ($filterValues as $f) {
         if ($f['field']->name === 'size') {

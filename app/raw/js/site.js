@@ -742,4 +742,29 @@ $(function(){
       $target[0].scrollIntoView({behavior: 'smooth', block: 'start'});
     }
   });
+
+
+  // Разворачивание описания товара
+  $('.item-description').each(function() {
+    var $article = $(this);
+    var $body = $article.find('.item-description-body');
+    var $btn = $article.find('.more span');
+
+    // Если содержимое меньше максимальной высоты — скрываем кнопку
+    if ($body[0].scrollHeight <= 140) {
+      $article.addClass('short');
+    }
+
+    $btn.on('click', function() {
+      var isExpanded = $article.hasClass('expanded');
+
+      if (isExpanded) {
+        $article.removeClass('expanded');
+        $btn.text('Развернуть описание');
+      } else {
+        $article.addClass('expanded');
+        $btn.text('Свернуть описание');
+      }
+    });
+  });
 });
