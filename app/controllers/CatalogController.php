@@ -55,7 +55,7 @@ class CatalogController extends Controller
     $dataProvider = new ActiveDataProvider([
       'query' => $query,
       'pagination' => [
-        'pageSize' => 12,
+        'pageSize' => 1,
         'page' => $page ? ((int)$page - 1) : 0,
         'route' => '/catalog/' . $category_slug . '/tovary',
         'params' => [],

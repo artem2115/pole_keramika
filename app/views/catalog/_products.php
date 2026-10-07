@@ -63,57 +63,10 @@ use yii\widgets\LinkPager;
     </div>
   </div>
 
-  <?php
-  $pagination = $dataProvider->pagination;
-  $currentPage = $pagination->getPage() + 1;
-  $pageCount = $pagination->getPageCount();
-
-// Текущие GET-параметры, кроме служебных
-  $currentParams = Yii::$app->request->get();
-  unset($currentParams['page']);
-  unset($currentParams['ajax']);
-  unset($currentParams['category_slug']);
-  unset($currentParams['collection_slug']);
-  unset($currentParams['item_slug']);
-
-// Базовый URL без номера страницы
-  $basePath = '/catalog/' . $category->slug . '/tovary';
-
-  $buildUrl = function($page) use ($basePath, $currentParams) {
-    $url = $basePath . '/';
-    if ($page > 1) {
-      $url .= $page . '/';
-    }
-    if (!empty($currentParams)) {
-      $url .= '?' . http_build_query($currentParams);
-    }
-    return $url;
-  };
-  ?>
-
-  <?php if ($pageCount > 1): ?>
-    <ul class="pgn">
-      <?php if ($currentPage > 1): ?>
-        <li class="prev"><a href="<?= $buildUrl($currentPage - 1) ?>">«</a></li>
-      <?php else: ?>
-        <li class="prev disabled"><span>«</span></li>
-      <?php endif; ?>
-
-      <?php for ($i = 1; $i <= $pageCount; $i++): ?>
-        <?php if ($i === $currentPage): ?>
-          <li class="active"><a href="<?= $buildUrl($i) ?>"><?= $i ?></a></li>
-        <?php else: ?>
-          <li><a href="<?= $buildUrl($i) ?>"><?= $i ?></a></li>
-        <?php endif; ?>
-      <?php endfor; ?>
-
-      <?php if ($currentPage < $pageCount): ?>
-        <li class="next"><a href="<?= $buildUrl($currentPage + 1) ?>">»</a></li>
-      <?php else: ?>
-        <li class="next disabled"><span>»</span></li>
-      <?php endif; ?>
-    </ul>
-  <?php endif; ?>
+  <?= \app\widgets\CategoryPager::widget([
+    'pagination' => $dataProvider->pagination,
+    'basePath' => '/catalog/' . $category->slug . '/tovary',
+  ]) ?>
 <?php else: ?>
   <p>Товары не найдены. Попробуйте изменить фильтры.</p>
 <?php endif; ?>
