@@ -42,7 +42,8 @@ class CatalogController extends Controller
    */
   public function actionCategory($category_slug, $page = null)
   {
-    CatalogAsset::register($this->view);
+    CatalogAsset::register($this->view);  // ← ВЕРНУТЬ
+
     $category = $this->findCategory($category_slug);
 
     $query = Item::find()
@@ -55,7 +56,7 @@ class CatalogController extends Controller
     $dataProvider = new ActiveDataProvider([
       'query' => $query,
       'pagination' => [
-        'pageSize' => 1,
+        'pageSize' => 12,
         'page' => $page ? ((int)$page - 1) : 0,
         'route' => '/catalog/' . $category_slug . '/tovary',
         'params' => [],
@@ -72,16 +73,7 @@ class CatalogController extends Controller
       ->orderBy(['order_num' => SORT_ASC, 'title' => SORT_ASC])
       ->all();
 
-    // Если AJAX — возвращаем только плитку
-    if (Yii::$app->request->isAjax && Yii::$app->request->get('ajax') === '1') {
-      return $this->renderPartial('_products', [
-        'category' => $category,
-        'dataProvider' => $dataProvider,
-        'itemData' => $itemData,
-        'view' => 'tovary',
-      ]);
-    }
-
+    // Минимум и максимум цены в категории
     $priceRange = Item::find()
       ->where(['category_id' => $category->category_id])
       ->andWhere(['status' => Item::STATUS_ON])
@@ -90,6 +82,20 @@ class CatalogController extends Controller
       ->asArray()
       ->one();
 
+    $priceMin = $priceRange ? (float)$priceRange['min_price'] : 0;
+    $priceMax = $priceRange ? (float)$priceRange['max_price'] : 0;
+
+    // AJAX-ветка
+    if (Yii::$app->request->isAjax && Yii::$app->request->get('ajax') === '1') {
+      return $this->renderPartial('_products', [
+        'category' => $category,
+        'dataProvider' => $dataProvider,
+        'itemData' => $itemData,
+        'filterValues' => $filterValues,
+        'activeFilters' => $activeFilters,
+      ]);
+    }
+
     return $this->render('category', [
       'category' => $category,
       'dataProvider' => $dataProvider,
@@ -97,12 +103,11 @@ class CatalogController extends Controller
       'activeFilters' => $activeFilters,
       'itemData' => $itemData,
       'allCategories' => $allCategories,
+      'priceMin' => $priceMin,
+      'priceMax' => $priceMax,
       'view' => 'tovary',
-      'priceMin' => $priceRange ? (float)$priceRange['min_price'] : 0,
-      'priceMax' => $priceRange ? (float)$priceRange['max_price'] : 0,
     ]);
-  }
-  /**
+  }  /**
    * Страница категории с коллекциями: /catalog/{category}/kollekcii/
    */
   public function actionCategoryCollections($category_slug)

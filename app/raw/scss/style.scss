@@ -404,6 +404,19 @@ input{color:$colorGray900}
   &.short .more {display: none;}
 }
 
+.active-filters {display: flex;flex-wrap: wrap;gap: 12px;align-items: center;padding: 12px 0 16px;margin-bottom: 16px;
+  &-list {display: flex;flex-wrap: wrap;gap: 8px;flex: 1 1 auto;}
+  &-reset {font-size: rem(14px);color: $colorGray500;background: none;border: 0;cursor: pointer;padding: 6px 12px;text-decoration: underline;white-space: nowrap;
+    &:hover {color: $colorBrand500;}
+  }
+}
+.active-filters-list button{display: inline-flex;align-items: center;gap: 6px;padding: 6px 10px 6px 12px;background: $colorGray50;border: 1px solid $colorGray100;border-radius: 4px;font-size: rem(14px);color: $colorGray900;cursor: pointer;transition: all 0.2s ease;
+  i {font-style: normal;font-size: rem(11px);color: $colorGray400;line-height: 1;}
+  &:hover {background: $colorBrand50;border-color: $colorBrand100;color: $colorBrand500;
+    i {color: $colorBrand500;}
+  }
+}
+
 .i-thg{position:relative;
   img{display:none;width:100%;
     &.active{display:block;}

@@ -236,6 +236,57 @@
 
       // Инициализация
       syncTabsFromCheckboxes();
+
+
+      // Клик по активному фильтру — снимаем его
+      $(document).on('click', '.active-filters-list button', function() {
+        var field = $(this).data('filter-field');
+        var slug = $(this).data('filter-slug');
+        var $root = getFilterRoot();
+
+        // Цена
+        if (field === 'price_from' || field === 'price_to') {
+          var $input = $root.find('input[name="' + field + '"]').first();
+          var dataAttr = field === 'price_from' ? 'min' : 'max';
+          $input.val($input.data(dataAttr));
+        }
+        // Хит
+        else if (field === 'is_hit') {
+          $root.find('input[name="is_hit"]').prop('checked', false);
+        }
+        // Чекбоксы
+        else {
+          var $checkbox = $root.find('input[name="' + field + '[]"][value="' + slug + '"]');
+          if ($checkbox.length) {
+            $checkbox.prop('checked', false);
+          }
+        }
+
+        syncTabsFromCheckboxes();
+        updateProducts();
+      });
+
+      // Клик по "Сбросить все"
+      $(document).on('click', '#active-filters-reset', function() {
+        var $root = getFilterRoot();
+
+        // Сбрасываем чекбоксы
+        $root.find('input[type="checkbox"]').prop('checked', false);
+
+        // Сбрасываем цену к дефолту
+        $root.find('input[name="price_from"]').each(function() {
+          $(this).val($(this).data('min'));
+        });
+        $root.find('input[name="price_to"]').each(function() {
+          $(this).val($(this).data('max'));
+        });
+
+        // Синхронизируем табы
+        syncTabsFromCheckboxes();
+
+        // Применяем
+        updateProducts();
+      });
     }
 
     // ============================================================

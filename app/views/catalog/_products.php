@@ -3,14 +3,20 @@
  * @var \yii\easyii\modules\catalog\models\Category $category
  * @var \yii\data\ActiveDataProvider $dataProvider
  * @var array $itemData
+ * @var array $filterValues
+ * @var array $activeFilters
  */
 
 use yii\easyii\helpers\Image;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\widgets\LinkPager;
-?>
+use app\widgets\CategoryPager;
 
+?>
+<?= $this->render('_active_filters', [
+  'filterValues' => $filterValues,
+  'activeFilters' => $activeFilters,
+]) ?>
 <?php if ($dataProvider->totalCount > 0): ?>
   <div class="prods-1-wrap">
     <div class="prods-1 prods-1-tile">
@@ -63,7 +69,7 @@ use yii\widgets\LinkPager;
     </div>
   </div>
 
-  <?= \app\widgets\CategoryPager::widget([
+  <?= CategoryPager::widget([
     'pagination' => $dataProvider->pagination,
     'basePath' => '/catalog/' . $category->slug . '/tovary',
   ]) ?>

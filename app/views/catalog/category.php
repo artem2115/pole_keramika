@@ -255,6 +255,8 @@ $activeBrand = $activeBrand ?? [];
           'category' => $category,
           'dataProvider' => $dataProvider,
           'itemData' => $itemData,
+          'filterValues' => $filterValues,
+          'activeFilters' => $activeFilters,
           'view' => 'tovary',
         ]) ?>
       </div>
