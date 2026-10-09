@@ -1,11 +1,12 @@
 <?php
 /**
  * @var yii\web\View $this
- * @var \yii\easyii\modules\catalog\models\Category $category
- * @var \yii\data\ActiveDataProvider|null $dataProvider
- * @var array $filterValues
- * @var array $activeFilters
- * @var array $itemData
+ * * @var \yii\easyii\modules\catalog\models\Category $category
+ * * @var \yii\data\ActiveDataProvider|null $dataProvider
+ * * @var array $filterValues
+ * * @var array $activeFilters
+ * * @var array $filterCounts
+ * * @var array $itemData
  * @var float $priceMin
  * @var float $priceMax
  * @var \yii\easyii\modules\catalog\models\Category[] $allCategories
@@ -78,6 +79,7 @@ $activeBrand = $activeBrand ?? [];
           'priceMin' => $priceMin,
           'priceMax' => $priceMax,
           'visibleLimit' => $visibleLimit,
+          'filterCounts' => $filterCounts ?? [],
         ]) ?>
       <?php else: ?>
         <?= $this->render('_sidebar_collections', [

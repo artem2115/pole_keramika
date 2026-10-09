@@ -23,7 +23,7 @@ $totalBrands = count($brandsMap);
                    name="brand[]"
                    value="<?= Html::encode($slug) ?>"
               <?= in_array($slug, $activeBrand) ? 'checked' : '' ?>>
-            <span><?= Html::encode($data['value']) ?></span>
+            <span><?= Html::encode($data['value']) ?> (<?= count($data['collection_ids']) ?>)</span>
           </label>
         </li>
         <?php $i++; endforeach; ?>

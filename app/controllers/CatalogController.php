@@ -64,6 +64,7 @@ class CatalogController extends Controller
     ]);
 
     $filterValues = $this->getFilterValues($category);
+    $filterCounts = $this->getFilterCounts($category, $activeFilters);
 
     $itemIds = array_map(function($i) { return $i->item_id; }, $dataProvider->models);
     $itemData = Item::getDataForItems($itemIds, ['unit', 'size']);
@@ -107,6 +108,7 @@ class CatalogController extends Controller
       'priceMax' => $priceMax,
       'visibleLimit' => (int) \yii\easyii\models\Setting::get('visible_limit_filters') ?: 7,
       'view' => 'tovary',
+      'filterCounts' => $filterCounts,
     ]);
   }  /**
    * Страница категории с коллекциями: /catalog/{category}/kollekcii/
@@ -148,6 +150,12 @@ class CatalogController extends Controller
         }
         $brandsMap[$slug]['collection_ids'][] = (int)$row['collection_id'];
       }
+
+      // Убираем дубликаты collection_id (один бренд может встречаться в нескольких товарах одной коллекции)
+      foreach ($brandsMap as $slug => &$data) {
+        $data['collection_ids'] = array_values(array_unique($data['collection_ids']));
+      }
+      unset($data);
 
       // Сортируем по оригинальному значению (по алфавиту)
       uasort($brandsMap, function($a, $b) {
@@ -223,7 +231,6 @@ class CatalogController extends Controller
       'view' => 'kollekcii',
     ]);
   }
-
   /**
    * Товар без коллекции: /catalog/{category_slug}/{item_slug}/
    */
@@ -456,5 +463,92 @@ class CatalogController extends Controller
     }
 
     return $map;
+  }
+
+  /**
+   * Считает количество товаров для каждого значения фильтра.
+   * Учитывает все активные фильтры, КРОМЕ текущего поля.
+   * @return array ['color' => ['belyj' => 12, 'seryj' => 23, ...], ...]
+   */
+  private function getFilterCounts($category, $activeFilters)
+  {
+    $counts = [];
+    $filterNames = ['brand', 'color', 'purpose', 'size', 'surface'];
+
+    foreach ($filterNames as $fieldName) {
+      // Собираем "другие" фильтры — все, кроме текущего
+      $otherFilters = $activeFilters;
+      unset($otherFilters[$fieldName]);
+
+      // Строим подзапрос: item_id товаров, соответствующих другим фильтрам
+      $itemQuery = Item::find()
+        ->where(['category_id' => $category->category_id])
+        ->andWhere(['status' => Item::STATUS_ON])
+        ->select(['item_id']);
+
+      // Применяем фильтры по другим полям
+      foreach ($otherFilters as $name => $values) {
+        if (empty($values)) continue;
+
+        // Цена
+        if ($name === 'price_from') {
+          $itemQuery->andWhere(['>=', 'price', (float)$values]);
+          continue;
+        }
+        if ($name === 'price_to') {
+          $itemQuery->andWhere(['<=', 'price', (float)$values]);
+          continue;
+        }
+        // Хит
+        if ($name === 'is_hit') {
+          $itemIds = ItemData::find()
+            ->where(['name' => 'ishit', 'value' => '1'])
+            ->select(['item_id'])
+            ->column();
+          $itemQuery->andWhere(['item_id' => $itemIds]);
+          continue;
+        }
+        // Обычные фильтры
+        $slugMap = $this->getSlugMap($category);
+        $originalValues = [];
+        foreach ((array)$values as $slug) {
+          if (isset($slugMap[$name][$slug])) {
+            $originalValues[] = $slugMap[$name][$slug];
+          } else {
+            $originalValues[] = $slug;
+          }
+        }
+        if (!empty($originalValues)) {
+          $itemIds = ItemData::find()
+            ->where(['name' => $name, 'value' => $originalValues])
+            ->select(['item_id'])
+            ->column();
+          $itemQuery->andWhere(['item_id' => $itemIds]);
+        }
+      }
+
+      $matchingItemIds = $itemQuery->column();
+
+      // Считаем значения для текущего поля
+      if (empty($matchingItemIds)) {
+        $counts[$fieldName] = [];
+        continue;
+      }
+
+      $rows = ItemData::find()
+        ->where(['item_id' => $matchingItemIds, 'name' => $fieldName])
+        ->select(['value', 'cnt' => 'COUNT(DISTINCT item_id)'])
+        ->groupBy('value')
+        ->asArray()
+        ->all();
+
+      $fieldCounts = [];
+      foreach ($rows as $row) {
+        $fieldCounts[$row['value']] = (int)$row['cnt'];
+      }
+      $counts[$fieldName] = $fieldCounts;
+    }
+
+    return $counts;
   }
 }

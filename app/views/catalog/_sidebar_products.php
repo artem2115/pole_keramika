@@ -2,6 +2,7 @@
 /**
  * @var array $filterValues
  * @var array $activeFilters
+ * @var array $filterCounts
  * @var float $priceMin
  * @var float $priceMax
  * @var int $visibleLimit
@@ -72,7 +73,20 @@ foreach ($filterValues as $filter):
               <?php if ($item['hex']): ?>
                 <i class="sb-clr" style="background:<?= Html::encode($item['hex']) ?>"></i>
               <?php endif; ?>
-              <span><?= Html::encode($item['label']) ?></span>
+              <span><?= Html::encode($item['label']) ?>
+                <?php
+                // Ищем счётчик для этого значения
+                $count = null;
+                if (!empty($filterCounts[$filter['field']->name])) {
+                  // Для цвета — сверяем по оригинальному значению (с HEX)
+                  $originalValue = $item['value'];
+                  $count = $filterCounts[$filter['field']->name][$originalValue] ?? 0;
+                }
+                ?>
+                <?php if ($count !== null): ?>
+                  (<?= $count ?>)
+                <?php endif; ?>
+</span>
             </label>
           </li>
         <?php endforeach; ?>
