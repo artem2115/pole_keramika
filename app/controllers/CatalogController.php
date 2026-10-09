@@ -105,6 +105,7 @@ class CatalogController extends Controller
       'allCategories' => $allCategories,
       'priceMin' => $priceMin,
       'priceMax' => $priceMax,
+      'visibleLimit' => (int) \yii\easyii\models\Setting::get('visible_limit_filters') ?: 7,
       'view' => 'tovary',
     ]);
   }  /**
@@ -218,6 +219,7 @@ class CatalogController extends Controller
       'activeBrand' => $activeBrand,
       'filterValues' => [],
       'activeFilters' => [],
+      'visibleLimit' => (int) \yii\easyii\models\Setting::get('visible_limit_filters') ?: 7,
       'view' => 'kollekcii',
     ]);
   }

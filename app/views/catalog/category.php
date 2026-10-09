@@ -14,12 +14,12 @@
  * @var array|null $brandsMap
  * @var array|null $activeBrand
  * @var string $view
+ * @var int $visibleLimit
  */
 
 use yii\easyii\helpers\Image;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\widgets\LinkPager;
 
 $this->title = $category->seo('title', $category->title);
 
@@ -65,128 +65,26 @@ $activeBrand = $activeBrand ?? [];
 <div class="c-wrap">
   <aside class="sidebar">
     <div class="f-r">
-      <?php // Блок категорий — общий для обеих вкладок ?>
-      <?php if (!empty($allCategories)): ?>
-        <div class="sb1">
-          <div class="sb1-ttl">
-            <b>Категория</b>
-            <i></i>
-          </div>
-          <div class="sb1-b">
-            <ul>
-              <?php foreach ($allCategories as $cat): ?>
-                <li>
-                  <a class="<?= $cat->category_id === $category->category_id ? 'active' : '' ?>"
-                     href="<?= Url::to(['/catalog/' . $cat->slug . '/' . ($view === 'kollekcii' ? 'kollekcii' : 'tovary')]) ?>">
-                    <?= Html::encode($cat->title) ?>
-                  </a>
-                </li>
-              <?php endforeach; ?>
-            </ul>
-          </div>
-        </div>
-      <?php endif; ?>
+      <?= $this->render('_sidebar_categories', [
+        'category' => $category,
+        'allCategories' => $allCategories,
+        'view' => $view,
+      ]) ?>
 
       <?php if ($view === 'tovary'): ?>
-        <?php // ================= ФИЛЬТРЫ ТОВАРОВ ================= ?>
-
-        <?php
-// Если активного фильтра нет — показываем мин/макс
-        $priceFromValue = $activeFilters['price_from'] ?? ($priceMin > 0 ? (int)$priceMin : '');
-        $priceToValue = $activeFilters['price_to'] ?? ($priceMax > 0 ? (int)$priceMax : '');
-        ?>
-        <div class="sb1">
-          <div class="sb1-ttl">
-            <b>Цена, ₽</b>
-          </div>
-          <div class="sb1-b">
-            <div class="price-sel">
-              <div class="ps">
-                <i>от</i>
-                <input type="text"
-                       name="price_from"
-                       value="<?= Html::encode($priceFromValue) ?>"
-                       data-min="<?= (int)$priceMin ?>"
-                       data-max="<?= (int)$priceMax ?>">
-              </div>
-              <div class="ps-mdash">&mdash;</div>
-              <div class="ps">
-                <i>до</i>
-                <input type="text"
-                       name="price_to"
-                       value="<?= Html::encode($priceToValue) ?>"
-                       data-min="<?= (int)$priceMin ?>"
-                       data-max="<?= (int)$priceMax ?>">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="filter-toggle">
-          <span class="label">Хит</span>
-          <label class="switch">
-            <input type="checkbox" name="is_hit" value="1" <?= !empty($activeFilters['is_hit']) ? 'checked' : '' ?>>
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <?php foreach ($filterValues as $filter): ?>
-          <?php if ($filter['field']->name === 'purpose') continue; ?>
-          <div class="sb1">
-            <div class="sb1-ttl">
-              <b><?= Html::encode($filter['field']->title) ?></b>
-              <i></i>
-            </div>
-            <div class="sb1-b">
-              <ul>
-                <?php foreach ($filter['values'] as $item): ?>
-                  <?php
-                  $slug = $item['slug'];
-                  $checked = in_array($slug, $activeFilters[$filter['field']->name] ?? []);
-                  ?>
-                  <li>
-                    <label>
-                      <input type="checkbox"
-                             name="<?= Html::encode($filter['field']->name) ?>[]"
-                             value="<?= Html::encode($slug) ?>"
-                             data-slug="<?= Html::encode($slug) ?>"
-                        <?= $checked ? 'checked' : '' ?>>
-                      <?php if ($item['hex']): ?>
-                        <i class="sb-clr" style="background:<?= Html::encode($item['hex']) ?>"></i>
-                      <?php endif; ?>
-                      <span><?= Html::encode($item['label']) ?></span>
-                    </label>
-                  </li>
-                <?php endforeach; ?>
-              </ul>
-            </div>
-          </div>
-        <?php endforeach; ?>
-
+        <?= $this->render('_sidebar_products', [
+          'filterValues' => $filterValues,
+          'activeFilters' => $activeFilters,
+          'priceMin' => $priceMin,
+          'priceMax' => $priceMax,
+          'visibleLimit' => $visibleLimit,
+        ]) ?>
       <?php else: ?>
-        <?php // ================= ФИЛЬТРЫ КОЛЛЕКЦИЙ ================= ?>
-
-        <?php if (!empty($brandsMap)): ?>
-          <div class="sb1">
-            <div class="sb1-ttl"><b>Бренд</b><i></i></div>
-            <div class="sb1-b">
-              <ul>
-                <?php foreach ($brandsMap as $slug => $data): ?>
-                  <li>
-                    <label>
-                      <input type="checkbox"
-                             name="brand[]"
-                             value="<?= Html::encode($slug) ?>"
-                        <?= in_array($slug, $activeBrand) ? 'checked' : '' ?>>
-                      <span><?= Html::encode($data['value']) ?></span>
-                    </label>
-                  </li>
-                <?php endforeach; ?>
-              </ul>
-            </div>
-          </div>
-        <?php endif; ?>
-
+        <?= $this->render('_sidebar_collections', [
+          'brandsMap' => $brandsMap,
+          'activeBrand' => $activeBrand,
+          'visibleLimit' => $visibleLimit,
+        ]) ?>
       <?php endif; ?>
     </div>
   </aside>
@@ -196,7 +94,8 @@ $activeBrand = $activeBrand ?? [];
       <div class="f-str">
         <div class="fs-1"><svg><use xlink:href="#filter"></use></svg> <span>Фильтр</span></div>
       </div>
-      <div class="f-app"><div class="f-app-b"></div>
+      <div class="f-app">
+        <div class="f-app-b"></div>
         <div class="f-app-footer">
           <button type="button" class="filter-submit-btn" id="filter-mobile-btn">Закрыть</button>
         </div>
@@ -225,7 +124,10 @@ $activeBrand = $activeBrand ?? [];
             </li>
           <?php endforeach; ?>
         </ul>
-      <?php endif;
+      <?php endif; ?>
+
+      <?php
+      // Размеры для табов
       $sizeFilter = null;
       foreach ($filterValues as $f) {
         if ($f['field']->name === 'size') {

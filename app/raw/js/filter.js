@@ -77,6 +77,26 @@
       return window.location.pathname + (queryString ? '?' + queryString : '');
     };
 
+    // Показать ещё в длинных фильтрах
+    $(document).on('click', '.filter-more', function() {
+      var $btn = $(this);
+      var $list = $btn.siblings('.filter-list');
+      var limit = parseInt($list.data('visible'), 10) || 7;
+      var $hidden = $list.find('li.filter-hidden');
+
+      if ($btn.data('expanded')) {
+        // Сворачиваем
+        $list.find('li').slice(limit).addClass('filter-hidden');
+        $btn.data('expanded', false);
+        $btn.text('Показать ещё (' + ($list.find('li').length - limit) + ')');
+      } else {
+        // Разворачиваем
+        $hidden.removeClass('filter-hidden');
+        $btn.data('expanded', true);
+        $btn.text('Свернуть');
+      }
+    });
+
     // ============================================================
     // Вкладка "Товары" — AJAX-фильтрация, пагинация, синхронизация табов
     // ============================================================

@@ -728,6 +728,11 @@ input{color:$colorGray900}
   }
 }
 
+.filter-list .filter-hidden {display: none;}
+.filter-more {font-size: rem(14px);color: $colorBrand500;background: none;border: 0;padding: 6px 0;cursor: pointer;text-decoration: underline;
+  &:hover {text-decoration: none;}
+}
+
 input[type=checkbox]{display:none;}
 input[type=checkbox] + var{@extend %brad-4;width: 20px;height: 20px;flex:0 0 20px;background-color: transparent;border: 1px solid $colorGray400;position: relative;transition: background-color 0.3s, border-color 0.3s;}
 input[type=checkbox]:checked + var {background-color:$colorBrand500;border-color:$colorBrand500;}
