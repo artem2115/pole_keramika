@@ -22,7 +22,9 @@ if (empty($allCategories)) return;
       <?php foreach ($allCategories as $cat): ?>
         <li>
           <a class="<?= $category && $cat->category_id === $category->category_id ? 'active' : '' ?>"
-             href="<?= Url::to(['/catalog/' . $cat->slug . '/' . ($view === 'kollekcii' ? 'kollekcii' : 'tovary')]) ?>">
+             href="<?= $view === 'kollekcii'
+               ? Url::to(['/collections/' . $cat->slug])
+               : Url::to(['/catalog/' . $cat->slug . '/tovary']) ?>">
             <?= Html::encode($cat->title) ?>
           </a>
         </li>

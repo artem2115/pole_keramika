@@ -71,7 +71,7 @@ $activeBrand = $activeBrand ?? [];
 <div class="c-wrap">
   <aside class="sidebar">
     <div class="f-r">
-      <?= $this->render('_sidebar_categories', [
+      <?= $this->render('@common/_sidebar_categories', [
         'category' => $category,
         'allCategories' => $allCategories,
         'view' => $view,
@@ -159,11 +159,9 @@ $activeBrand = $activeBrand ?? [];
           <a href="<?= $category ? Url::to(['/catalog/' . $category->slug . '/tovary']) : Url::to(['/catalog']) ?>">Товары</a>
         </li>
         <li>
-          <?php if ($category): ?>
-            <a href="<?= Url::to(['/catalog/' . $category->slug . '/kollekcii']) ?>">Коллекции</a>
-          <?php else: ?>
-            <span>Коллекции</span>
-          <?php endif; ?>
+          <a href="<?= $category
+            ? Url::to(['/collections/' . $category->slug])
+            : Url::to(['/collections']) ?>">Коллекции</a>
         </li>
       </ul>
 

@@ -26,7 +26,12 @@ use app\widgets\CategoryPager;
         $itemUnit = $itemData[$item->item_id]['unit'][0] ?? '';
         $itemSizes = $itemData[$item->item_id]['size'] ?? [];
         $itemUrl = $item->collection
-          ? Url::to(['/collection/' . $item->collection->slug . '/' . $item->slug])
+          ? Url::to([
+            '/collections/'
+            . $item->collection->category->slug . '/'
+            . $item->collection->slug . '/'
+            . $item->slug
+          ])
           : Url::to(['/catalog/' . $item->category->slug . '/' . $item->slug]);
         ?>
         <div class="prod-1">

@@ -4,21 +4,83 @@ namespace app\controllers;
 use Yii;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\easyii\modules\catalog\models\Category;
 use yii\easyii\modules\catalog\models\Item;
 use yii\easyii\modules\collections\models\Collection;
 
 class CollectionController extends Controller
 {
   /**
-   * Страница коллекции: /collection/{slug}/
+   * Список всех коллекций: /collections/
    */
-  public function actionView($collection_slug)
+  public function actionIndex()
   {
+    $collections = Collection::find()
+      ->where(['status' => Collection::STATUS_ON])
+      ->orderBy(['order_num' => SORT_ASC, 'title' => SORT_ASC])
+      ->all();
+
+    $collectionPrices = $this->getCollectionPrices($collections);
+
+    $allCategories = Category::find()
+      ->where(['status' => Category::STATUS_ON])
+      ->orderBy(['order_num' => SORT_ASC, 'title' => SORT_ASC])
+      ->all();
+
+    return $this->render('index', [
+      'category' => null,
+      'collections' => $collections,
+      'collectionPrices' => $collectionPrices,
+      'allCategories' => $allCategories,
+    ]);
+  }
+
+  /**
+   * Коллекции категории: /collections/{category_slug}/
+   */
+  public function actionCategory($category_slug)
+  {
+    $category = Category::findOne(['slug' => $category_slug, 'status' => Category::STATUS_ON]);
+    if (!$category) {
+      throw new NotFoundHttpException('Категория не найдена');
+    }
+
+    $collections = Collection::find()
+      ->where(['category_id' => $category->category_id])
+      ->andWhere(['status' => Collection::STATUS_ON])
+      ->orderBy(['order_num' => SORT_ASC, 'title' => SORT_ASC])
+      ->all();
+
+    $collectionPrices = $this->getCollectionPrices($collections);
+
+    $allCategories = Category::find()
+      ->where(['status' => Category::STATUS_ON])
+      ->orderBy(['order_num' => SORT_ASC, 'title' => SORT_ASC])
+      ->all();
+
+    return $this->render('index', [
+      'category' => $category,
+      'collections' => $collections,
+      'collectionPrices' => $collectionPrices,
+      'allCategories' => $allCategories,
+    ]);
+  }
+
+  /**
+   * Одна коллекция: /collections/{category_slug}/{collection_slug}/
+   */
+  public function actionView($category_slug, $collection_slug)
+  {
+    $category = Category::findOne(['slug' => $category_slug, 'status' => Category::STATUS_ON]);
+    if (!$category) {
+      throw new NotFoundHttpException('Категория не найдена');
+    }
+
     $collection = Collection::findOne([
       'slug' => $collection_slug,
+      'category_id' => $category->category_id,
       'status' => Collection::STATUS_ON,
     ]);
-
     if (!$collection) {
       throw new NotFoundHttpException('Коллекция не найдена');
     }
@@ -35,16 +97,13 @@ class CollectionController extends Controller
     $itemData = Item::getDataForItems($itemIds, ['size', 'unit']);
 
     // Похожие коллекции из той же категории (кроме текущей)
-    $similarCollections = [];
-    if ($collection->category_id) {
-      $similarCollections = Collection::find()
-        ->where(['category_id' => $collection->category_id])
-        ->andWhere(['!=', 'collection_id', $collection->collection_id])
-        ->andWhere(['status' => Collection::STATUS_ON])
-        ->orderBy(['order_num' => SORT_ASC, 'title' => SORT_ASC])
-        ->limit(8)
-        ->all();
-    }
+    $similarCollections = Collection::find()
+      ->where(['category_id' => $collection->category_id])
+      ->andWhere(['!=', 'collection_id', $collection->collection_id])
+      ->andWhere(['status' => Collection::STATUS_ON])
+      ->orderBy(['order_num' => SORT_ASC, 'title' => SORT_ASC])
+      ->limit(8)
+      ->all();
 
     return $this->render('view', [
       'collection' => $collection,
@@ -56,15 +115,20 @@ class CollectionController extends Controller
   }
 
   /**
-   * Страница товара в коллекции: /collection/{collection_slug}/{item_slug}/
+   * Товар в коллекции: /collections/{category_slug}/{collection_slug}/{item_slug}/
    */
-  public function actionItem($collection_slug, $item_slug)
+  public function actionItem($category_slug, $collection_slug, $item_slug)
   {
+    $category = Category::findOne(['slug' => $category_slug, 'status' => Category::STATUS_ON]);
+    if (!$category) {
+      throw new NotFoundHttpException('Категория не найдена');
+    }
+
     $collection = Collection::findOne([
       'slug' => $collection_slug,
+      'category_id' => $category->category_id,
       'status' => Collection::STATUS_ON,
     ]);
-
     if (!$collection) {
       throw new NotFoundHttpException('Коллекция не найдена');
     }
@@ -74,7 +138,6 @@ class CollectionController extends Controller
       'collection_id' => $collection->collection_id,
       'status' => Item::STATUS_ON,
     ]);
-
     if (!$item) {
       throw new NotFoundHttpException('Товар не найден');
     }
@@ -101,5 +164,32 @@ class CollectionController extends Controller
       'collectionItems' => $collectionItems,
       'itemData' => $itemData,
     ]);
+  }
+
+  /**
+   * Минимальные цены для списка коллекций
+   */
+  private function getCollectionPrices($collections)
+  {
+    $prices = [];
+    $ids = array_map(function($c) { return $c->collection_id; }, $collections);
+    if (empty($ids)) {
+      return $prices;
+    }
+
+    $rows = Item::find()
+      ->where(['collection_id' => $ids])
+      ->andWhere(['status' => Item::STATUS_ON])
+      ->andWhere(['>', 'price', 0])
+      ->select(['collection_id', 'min_price' => 'MIN(price)'])
+      ->groupBy('collection_id')
+      ->asArray()
+      ->all();
+
+    foreach ($rows as $row) {
+      $prices[$row['collection_id']] = (float)$row['min_price'];
+    }
+
+    return $prices;
   }
 }

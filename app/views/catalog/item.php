@@ -33,7 +33,7 @@ $itemUnit = $itemData[$item->item_id]['unit'][0] ?? $item->getDataValue('unit');
           </a>
         </li>
         <li>
-          <a href="<?= Url::to(['/collection/' . $collection->slug]) ?>">
+          <a href="<?= Url::to(['/collections/' . $collection->category->slug . '/' . $collection->slug]) ?>">
             <?= Html::encode($collection->title) ?>
           </a>
         </li>
@@ -89,7 +89,7 @@ $itemUnit = $itemData[$item->item_id]['unit'][0] ?? $item->getDataValue('unit');
 
       <?php if ($collection): ?>
         <div class="b9">
-          <a href="<?= Url::to(['/collection/' . $collection->slug]) ?>">
+          <a href="<?= Url::to(['/collections/' . $collection->category->slug . '/' . $collection->slug]) ?>">
             <i>
               <?php if ($collection->image): ?>
                 <img src="<?= Image::thumb($collection->image, 131, 90) ?>" alt="">
@@ -134,7 +134,7 @@ $itemUnit = $itemData[$item->item_id]['unit'][0] ?? $item->getDataValue('unit');
   <div class="ttl2">
     <div class="h2">Другие товары из коллекции</div>
     <div class="b9">
-      <a href="<?= Url::to(['/collection/' . $collection->slug]) ?>">
+      <a href="<?= Url::to(['/collections/' . $collection->category->slug . '/' . $collection->slug]) ?>">
         <i>
           <?php if ($collection->image): ?>
             <img src="<?= Image::thumb($collection->image, 131, 90) ?>" alt="">
@@ -166,7 +166,7 @@ $itemUnit = $itemData[$item->item_id]['unit'][0] ?? $item->getDataValue('unit');
             <i>₽<?= $cItemUnit ? '/' . $cItemUnit : '' ?></i>
           </div>
           <h4>
-            <a href="<?= Url::to(['/collection/' . $collection->slug . '/' . $cItem->slug]) ?>">
+            <a href="<?= Url::to(['/collections/' . $collection->category->slug . '/' . $collection->slug . '/' . $cItem->slug]) ?>">
               <?= Html::encode($cItem->title) ?>
             </a>
           </h4>

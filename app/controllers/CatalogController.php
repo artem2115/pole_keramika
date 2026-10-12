@@ -169,122 +169,6 @@ class CatalogController extends Controller
   }
 
   /**
-   * Страница категории с коллекциями: /catalog/{category}/kollekcii/
-   */
-  public function actionCategoryCollections($category_slug)
-  {
-    $category = $this->findCategory($category_slug);
-
-    $allCollections = Collection::find()
-      ->where(['category_id' => $category->category_id])
-      ->andWhere(['status' => Collection::STATUS_ON])
-      ->all();
-
-    $collectionIds = array_map(function($c) { return $c->collection_id; }, $allCollections);
-
-    $brandsMap = [];
-    if (!empty($collectionIds)) {
-      $rows = ItemData::find()
-        ->alias('d')
-        ->innerJoin(['i' => Item::tableName()], 'i.item_id = d.item_id')
-        ->where(['i.collection_id' => $collectionIds])
-        ->andWhere(['i.status' => Item::STATUS_ON])
-        ->andWhere(['d.name' => 'brand'])
-        ->select(['d.value', 'i.collection_id'])
-        ->asArray()
-        ->all();
-
-      foreach ($rows as $row) {
-        $brand = $row['value'];
-        $slug = Translit::slug($brand);
-
-        if (!isset($brandsMap[$slug])) {
-          $brandsMap[$slug] = [
-            'value' => $brand,
-            'collection_ids' => [],
-          ];
-        }
-        $brandsMap[$slug]['collection_ids'][] = (int)$row['collection_id'];
-      }
-
-      // Убираем дубликаты collection_id
-      foreach ($brandsMap as $slug => &$data) {
-        $data['collection_ids'] = array_values(array_unique($data['collection_ids']));
-      }
-      unset($data);
-
-      uasort($brandsMap, function($a, $b) {
-        return strcmp($a['value'], $b['value']);
-      });
-    }
-
-    $activeBrand = Yii::$app->request->get('brand', '');
-    if (is_array($activeBrand)) {
-      $activeBrand = array_filter($activeBrand);
-    } else {
-      $activeBrand = array_filter(array_map('trim', explode(',', (string)$activeBrand)));
-    }
-
-    if (!empty($activeBrand)) {
-      $matchedCollectionIds = [];
-      foreach ($activeBrand as $slug) {
-        if (!empty($brandsMap[$slug]['collection_ids'])) {
-          $matchedCollectionIds = array_merge($matchedCollectionIds, $brandsMap[$slug]['collection_ids']);
-        }
-      }
-      $matchedCollectionIds = array_unique($matchedCollectionIds);
-
-      $collections = Collection::find()
-        ->where(['collection_id' => $matchedCollectionIds])
-        ->andWhere(['status' => Collection::STATUS_ON])
-        ->orderBy(['order_num' => SORT_ASC, 'title' => SORT_ASC])
-        ->all();
-    } else {
-      $collections = Collection::find()
-        ->where(['category_id' => $category->category_id])
-        ->andWhere(['status' => Collection::STATUS_ON])
-        ->orderBy(['order_num' => SORT_ASC, 'title' => SORT_ASC])
-        ->all();
-    }
-
-    $currentCollectionIds = array_map(function($c) { return $c->collection_id; }, $collections);
-    $collectionPrices = [];
-    if (!empty($currentCollectionIds)) {
-      $rows = Item::find()
-        ->where(['collection_id' => $currentCollectionIds])
-        ->andWhere(['status' => Item::STATUS_ON])
-        ->andWhere(['>', 'price', 0])
-        ->select(['collection_id', 'min_price' => 'MIN(price)'])
-        ->groupBy('collection_id')
-        ->asArray()
-        ->all();
-
-      foreach ($rows as $row) {
-        $collectionPrices[$row['collection_id']] = (float)$row['min_price'];
-      }
-    }
-
-    $allCategories = Category::find()
-      ->where(['status' => Category::STATUS_ON])
-      ->orderBy(['order_num' => SORT_ASC, 'title' => SORT_ASC])
-      ->all();
-
-    return $this->render('category', [
-      'category' => $category,
-      'collections' => $collections,
-      'collectionPrices' => $collectionPrices,
-      'allCategories' => $allCategories,
-      'brandsMap' => $brandsMap,
-      'activeBrand' => $activeBrand,
-      'filterValues' => [],
-      'activeFilters' => [],
-      'visibleLimit' => (int) \yii\easyii\models\Setting::get('visible_limit_filters') ?: 7,
-      'view' => 'kollekcii',
-      'totalCount' => 0,
-    ]);
-  }
-
-  /**
    * Товар без коллекции: /catalog/{category_slug}/{item_slug}/
    */
   public function actionItemNoCollection($category_slug, $item_slug)
@@ -301,11 +185,14 @@ class CatalogController extends Controller
       throw new NotFoundHttpException('Товар не найден');
     }
 
+    // Редирект на новый URL коллекции
     if ($item->collection_id && $item->collection) {
-      return $this->redirect(
-        ['/collection/' . $item->collection->slug . '/' . $item->slug],
-        301
-      );
+      return $this->redirect([
+        '/collections/'
+        . $item->collection->category->slug . '/'
+        . $item->collection->slug . '/'
+        . $item->slug
+      ], 301);
     }
 
     return $this->render('/catalog/item', [
@@ -318,7 +205,6 @@ class CatalogController extends Controller
       'itemData' => [],
     ]);
   }
-
   /**
    * Найти категорию по slug или 404
    */

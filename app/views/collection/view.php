@@ -122,7 +122,7 @@ if (!empty($items)): ?>
           <i>₽<?= $itemUnit ? '/' . $itemUnit : '' ?></i>
         </div>
         <h4>
-          <a href="<?= Url::to(['/collection/' . $collection->slug . '/' . $item->slug]) ?>">
+          <a href="<?= Url::to(['/collections/' . $collection->category->slug . '/' . $collection->slug . '/' . $item->slug]) ?>">
             <?= Html::encode($item->title) ?>
           </a>
         </h4>
@@ -155,7 +155,7 @@ if (!empty($similarCollections)): ?>
       <div class="prod-1">
         <div class="p1-t">
           <div class="i">
-            <a href="<?= Url::to(['/collection/' . $similar->slug]) ?>">
+            <a href="<?= Url::to(['/collections/' . $similar->category->slug . '/' . $similar->slug]) ?>">
               <?php if ($similar->image): ?>
                 <img src="<?= Image::thumb($similar->image, 341, 240) ?>" alt="<?= Html::encode($similar->title) ?>">
               <?php else: ?>
@@ -168,7 +168,7 @@ if (!empty($similarCollections)): ?>
               от <?= number_format($similar->getMinPrice(), 0, '.', ' ') ?> <span>₽</span>
             </div>
             <h4 class="p1-ttl">
-              <a href="<?= Url::to(['/collection/' . $similar->slug]) ?>">
+              <a href="<?= Url::to(['/collections/' . $similar->category->slug . '/' . $similar->slug]) ?>">
                 <?= Html::encode($similar->title) ?>
               </a>
             </h4>
