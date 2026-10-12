@@ -1,4 +1,5 @@
 <?php
+//app/views/catalog/_sidebar_categories.php
 /**
  * @var \yii\easyii\modules\catalog\models\Category $category
  * @var \yii\easyii\modules\catalog\models\Category[] $allCategories
@@ -20,7 +21,7 @@ if (empty($allCategories)) return;
     <ul>
       <?php foreach ($allCategories as $cat): ?>
         <li>
-          <a class="<?= $cat->category_id === $category->category_id ? 'active' : '' ?>"
+          <a class="<?= $category && $cat->category_id === $category->category_id ? 'active' : '' ?>"
              href="<?= Url::to(['/catalog/' . $cat->slug . '/' . ($view === 'kollekcii' ? 'kollekcii' : 'tovary')]) ?>">
             <?= Html::encode($cat->title) ?>
           </a>

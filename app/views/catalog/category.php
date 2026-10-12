@@ -1,4 +1,5 @@
 <?php
+//app/views/catalog/category.php
 /**
  * @var yii\web\View $this
  * * @var \yii\easyii\modules\catalog\models\Category $category
@@ -22,7 +23,7 @@ use yii\easyii\helpers\Image;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-$this->title = $category->seo('title', $category->title);
+$this->title = $category ? $category->seo('title', $category->title) : 'Каталог';
 
 // Значения по умолчанию для вкладки "Коллекции"
 $brandsMap = $brandsMap ?? [];
@@ -49,15 +50,19 @@ $activeBrand = $activeBrand ?? [];
 <div class="bc">
   <ul>
     <li><a href="/">Главная</a></li>
-    <li><a href="<?= Url::to(['/catalog']) ?>">Каталог</a></li>
-    <li><?= Html::encode($category->title) ?></li>
+    <?php if ($category): ?>
+      <li><a href="<?= Url::to(['/catalog']) ?>">Каталог</a></li>
+      <li><?= Html::encode($category->title) ?></li>
+    <?php else: ?>
+      <li>Каталог</li>
+    <?php endif; ?>
   </ul>
 </div>
 
 <h1>
-  <?= Html::encode($category->title) ?>
+  <?= $category ? Html::encode($category->title) : 'Каталог' ?>
   <?php if ($view === 'tovary'): ?>
-    <small><?= $dataProvider->totalCount ?> товаров</small>
+    <small><?= $totalCount ?? $dataProvider->totalCount ?> товаров</small>
   <?php else: ?>
     <small><?= count($collections ?? []) ?> коллекций</small>
   <?php endif; ?>
@@ -150,8 +155,16 @@ $activeBrand = $activeBrand ?? [];
       <?php endif; ?>
 
       <ul class="tabs">
-        <li class="active"><a href="<?= Url::to(['/catalog/' . $category->slug . '/tovary']) ?>">Товары</a></li>
-        <li><a href="<?= Url::to(['/catalog/' . $category->slug . '/kollekcii']) ?>">Коллекции</a></li>
+        <li class="active">
+          <a href="<?= $category ? Url::to(['/catalog/' . $category->slug . '/tovary']) : Url::to(['/catalog']) ?>">Товары</a>
+        </li>
+        <li>
+          <?php if ($category): ?>
+            <a href="<?= Url::to(['/catalog/' . $category->slug . '/kollekcii']) ?>">Коллекции</a>
+          <?php else: ?>
+            <span>Коллекции</span>
+          <?php endif; ?>
+        </li>
       </ul>
 
       <div id="products-container">

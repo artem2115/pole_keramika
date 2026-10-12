@@ -1,4 +1,5 @@
 <?php
+//app/views/catalog/item.php
 /**
  * @var yii\web\View $this
  * @var \yii\easyii\modules\catalog\models\Category $category

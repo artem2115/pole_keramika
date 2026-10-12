@@ -1,4 +1,5 @@
 <?php
+//app/views/catalog/_products.php
 /**
  * @var \yii\easyii\modules\catalog\models\Category $category
  * @var \yii\data\ActiveDataProvider $dataProvider
@@ -26,7 +27,7 @@ use app\widgets\CategoryPager;
         $itemSizes = $itemData[$item->item_id]['size'] ?? [];
         $itemUrl = $item->collection
           ? Url::to(['/collection/' . $item->collection->slug . '/' . $item->slug])
-          : Url::to(['/catalog/' . $category->slug . '/' . $item->slug]);
+          : Url::to(['/catalog/' . $item->category->slug . '/' . $item->slug]);
         ?>
         <div class="prod-1">
           <div class="p1-t">
@@ -71,7 +72,9 @@ use app\widgets\CategoryPager;
 
   <?= CategoryPager::widget([
     'pagination' => $dataProvider->pagination,
-    'basePath' => '/catalog/' . $category->slug . '/tovary',
+    'basePath' => $category
+      ? '/catalog/' . $category->slug . '/tovary'
+      : '/catalog',
   ]) ?>
 <?php else: ?>
   <p>Товары не найдены. Попробуйте изменить фильтры.</p>

@@ -1,4 +1,5 @@
 <?php
+//app/views/collection/view.php
 use yii\easyii\helpers\Image;
 use yii\helpers\Html;
 use yii\helpers\Url;

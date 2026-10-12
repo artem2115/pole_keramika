@@ -15,17 +15,74 @@ use yii\easyii\modules\collections\models\Collection;
 class CatalogController extends Controller
 {
   /**
-   * Главная каталога (список всех категорий)
+   * Главная каталога — все товары всех категорий
    */
-  public function actionIndex()
+  public function actionIndex($page = null)
   {
-    $categories = Category::find()
+    CatalogAsset::register($this->view);
+
+    $query = Item::find()
+      ->andWhere(['status' => Item::STATUS_ON])
+      ->orderBy(['time' => SORT_DESC]);
+
+    $activeFilters = $this->applyFilters($query, null);
+
+    $dataProvider = new ActiveDataProvider([
+      'query' => $query,
+      'pagination' => [
+        'pageSize' => 12,
+        'page' => $page ? ((int)$page - 1) : 0,
+        'route' => '/catalog',
+        'params' => [],
+      ],
+    ]);
+
+    $filterValues = $this->getFilterValues(null);
+    $filterCounts = $this->getFilterCounts(null, $activeFilters);
+
+    $itemIds = array_map(function($i) { return $i->item_id; }, $dataProvider->models);
+    $itemData = Item::getDataForItems($itemIds, ['unit', 'size']);
+
+    $allCategories = Category::find()
       ->where(['status' => Category::STATUS_ON])
       ->orderBy(['order_num' => SORT_ASC, 'title' => SORT_ASC])
       ->all();
 
-    return $this->render('index', [
-      'categories' => $categories,
+    $totalCount = Item::find()->where(['status' => Item::STATUS_ON])->count();
+
+    $priceRange = Item::find()
+      ->where(['status' => Item::STATUS_ON])
+      ->andWhere(['>', 'price', 0])
+      ->select(['min_price' => 'MIN(price)', 'max_price' => 'MAX(price)'])
+      ->asArray()
+      ->one();
+
+    $priceMin = $priceRange ? (float)$priceRange['min_price'] : 0;
+    $priceMax = $priceRange ? (float)$priceRange['max_price'] : 0;
+
+    if (Yii::$app->request->isAjax && Yii::$app->request->get('ajax') === '1') {
+      return $this->renderPartial('_products', [
+        'category' => null,
+        'dataProvider' => $dataProvider,
+        'itemData' => $itemData,
+        'filterValues' => $filterValues,
+        'activeFilters' => $activeFilters,
+      ]);
+    }
+
+    return $this->render('category', [
+      'category' => null,
+      'dataProvider' => $dataProvider,
+      'filterValues' => $filterValues,
+      'activeFilters' => $activeFilters,
+      'itemData' => $itemData,
+      'allCategories' => $allCategories,
+      'priceMin' => $priceMin,
+      'priceMax' => $priceMax,
+      'visibleLimit' => (int) \yii\easyii\models\Setting::get('visible_limit_filters') ?: 7,
+      'view' => 'tovary',
+      'filterCounts' => $filterCounts,
+      'totalCount' => $totalCount,
     ]);
   }
 
@@ -42,7 +99,7 @@ class CatalogController extends Controller
    */
   public function actionCategory($category_slug, $page = null)
   {
-    CatalogAsset::register($this->view);  // ← ВЕРНУТЬ
+    CatalogAsset::register($this->view);
 
     $category = $this->findCategory($category_slug);
 
@@ -74,7 +131,6 @@ class CatalogController extends Controller
       ->orderBy(['order_num' => SORT_ASC, 'title' => SORT_ASC])
       ->all();
 
-    // Минимум и максимум цены в категории
     $priceRange = Item::find()
       ->where(['category_id' => $category->category_id])
       ->andWhere(['status' => Item::STATUS_ON])
@@ -86,7 +142,6 @@ class CatalogController extends Controller
     $priceMin = $priceRange ? (float)$priceRange['min_price'] : 0;
     $priceMax = $priceRange ? (float)$priceRange['max_price'] : 0;
 
-    // AJAX-ветка
     if (Yii::$app->request->isAjax && Yii::$app->request->get('ajax') === '1') {
       return $this->renderPartial('_products', [
         'category' => $category,
@@ -109,15 +164,17 @@ class CatalogController extends Controller
       'visibleLimit' => (int) \yii\easyii\models\Setting::get('visible_limit_filters') ?: 7,
       'view' => 'tovary',
       'filterCounts' => $filterCounts,
+      'totalCount' => $dataProvider->totalCount,
     ]);
-  }  /**
+  }
+
+  /**
    * Страница категории с коллекциями: /catalog/{category}/kollekcii/
    */
   public function actionCategoryCollections($category_slug)
   {
     $category = $this->findCategory($category_slug);
 
-    // Получаем все коллекции категории
     $allCollections = Collection::find()
       ->where(['category_id' => $category->category_id])
       ->andWhere(['status' => Collection::STATUS_ON])
@@ -125,7 +182,6 @@ class CatalogController extends Controller
 
     $collectionIds = array_map(function($c) { return $c->collection_id; }, $allCollections);
 
-    // Собираем бренды из товаров коллекций: [slug => ['value' => оригинал, 'collection_ids' => [...]]]
     $brandsMap = [];
     if (!empty($collectionIds)) {
       $rows = ItemData::find()
@@ -151,19 +207,17 @@ class CatalogController extends Controller
         $brandsMap[$slug]['collection_ids'][] = (int)$row['collection_id'];
       }
 
-      // Убираем дубликаты collection_id (один бренд может встречаться в нескольких товарах одной коллекции)
+      // Убираем дубликаты collection_id
       foreach ($brandsMap as $slug => &$data) {
         $data['collection_ids'] = array_values(array_unique($data['collection_ids']));
       }
       unset($data);
 
-      // Сортируем по оригинальному значению (по алфавиту)
       uasort($brandsMap, function($a, $b) {
         return strcmp($a['value'], $b['value']);
       });
     }
 
-    // Применяем фильтр по бренду из GET
     $activeBrand = Yii::$app->request->get('brand', '');
     if (is_array($activeBrand)) {
       $activeBrand = array_filter($activeBrand);
@@ -172,7 +226,6 @@ class CatalogController extends Controller
     }
 
     if (!empty($activeBrand)) {
-      // Находим коллекции, в которых есть хотя бы один из выбранных брендов
       $matchedCollectionIds = [];
       foreach ($activeBrand as $slug) {
         if (!empty($brandsMap[$slug]['collection_ids'])) {
@@ -194,7 +247,6 @@ class CatalogController extends Controller
         ->all();
     }
 
-    // Собираем минимальные цены для найденных коллекций
     $currentCollectionIds = array_map(function($c) { return $c->collection_id; }, $collections);
     $collectionPrices = [];
     if (!empty($currentCollectionIds)) {
@@ -212,7 +264,6 @@ class CatalogController extends Controller
       }
     }
 
-    // Все категории для сайдбара
     $allCategories = Category::find()
       ->where(['status' => Category::STATUS_ON])
       ->orderBy(['order_num' => SORT_ASC, 'title' => SORT_ASC])
@@ -229,8 +280,10 @@ class CatalogController extends Controller
       'activeFilters' => [],
       'visibleLimit' => (int) \yii\easyii\models\Setting::get('visible_limit_filters') ?: 7,
       'view' => 'kollekcii',
+      'totalCount' => 0,
     ]);
   }
+
   /**
    * Товар без коллекции: /catalog/{category_slug}/{item_slug}/
    */
@@ -248,7 +301,6 @@ class CatalogController extends Controller
       throw new NotFoundHttpException('Товар не найден');
     }
 
-    // Если у товара есть коллекция — редиректим на канонический URL
     if ($item->collection_id && $item->collection) {
       return $this->redirect(
         ['/collection/' . $item->collection->slug . '/' . $item->slug],
@@ -281,21 +333,46 @@ class CatalogController extends Controller
 
   /**
    * Собрать значения для фильтров из ItemData
-   * @return array — [['field' => fieldObject, 'values' => [...]], ...]
+   * @param Category|null $category
    */
-  private function getFilterValues($category)
+  private function getFilterValues($category = null)
   {
     $filters = [];
 
-    if (empty($category->fields)) {
+    // Собираем поля
+    if ($category) {
+      $fields = $category->fields ?: [];
+    } else {
+      // Все поля всех категорий — уникальные по имени
+      $uniqueFields = [];
+      $allCategories = Category::find()->where(['status' => Category::STATUS_ON])->all();
+      foreach ($allCategories as $cat) {
+        foreach ($cat->fields ?: [] as $field) {
+          if (!isset($uniqueFields[$field->name])) {
+            $uniqueFields[$field->name] = $field;
+          }
+        }
+      }
+      $fields = array_values($uniqueFields);
+    }
+
+    if (empty($fields)) {
       return $filters;
     }
 
-    $items = Item::find()
-      ->where(['category_id' => $category->category_id])
-      ->andWhere(['status' => Item::STATUS_ON])
-      ->select(['item_id'])
-      ->column();
+    // Собираем item_id
+    if ($category) {
+      $items = Item::find()
+        ->where(['category_id' => $category->category_id])
+        ->andWhere(['status' => Item::STATUS_ON])
+        ->select(['item_id'])
+        ->column();
+    } else {
+      $items = Item::find()
+        ->where(['status' => Item::STATUS_ON])
+        ->select(['item_id'])
+        ->column();
+    }
 
     if (empty($items)) {
       return $filters;
@@ -314,7 +391,7 @@ class CatalogController extends Controller
 
     $filterFields = ['brand', 'color', 'purpose', 'size', 'surface'];
 
-    foreach ($category->fields as $field) {
+    foreach ($fields as $field) {
       if (!in_array($field->name, $filterFields)) {
         continue;
       }
@@ -327,7 +404,6 @@ class CatalogController extends Controller
       $values = array_unique($values);
       sort($values);
 
-      // Готовим значения с slug
       $items_with_slug = [];
       foreach ($values as $value) {
         $label = $value;
@@ -338,9 +414,9 @@ class CatalogController extends Controller
         }
 
         $items_with_slug[] = [
-          'value' => $value,      // оригинал (для данных)
-          'label' => $label,      // отображаемое
-          'slug' => Translit::slug($label), // для URL
+          'value' => $value,
+          'label' => $label,
+          'slug' => Translit::slug($label),
           'hex' => $hex,
         ];
       }
@@ -353,11 +429,11 @@ class CatalogController extends Controller
 
     return $filters;
   }
+
   /**
    * Применить фильтры из GET к запросу
-   * @return array — активные фильтры
    */
-  private function applyFilters(&$query, $category)
+  private function applyFilters(&$query, $category = null)
   {
     $active = [];
     $slugMap = $this->getSlugMap($category);
@@ -390,31 +466,24 @@ class CatalogController extends Controller
     foreach ($filterNames as $name) {
       $raw = Yii::$app->request->get($name, '');
 
-      // Парсим: строка через запятую ИЛИ массив (для обратной совместимости)
       if (is_array($raw)) {
         $slugs = array_filter($raw);
       } else {
         $slugs = array_filter(array_map('trim', explode(',', (string)$raw)));
       }
 
-      if (empty($slugs)) {
-        continue;
-      }
+      if (empty($slugs)) continue;
 
-      // Преобразуем slug обратно в оригинальные значения
       $originalValues = [];
       foreach ($slugs as $slug) {
         if (isset($slugMap[$name][$slug])) {
           $originalValues[] = $slugMap[$name][$slug];
         } else {
-          // Если в карте нет — используем как есть (обратная совместимость)
           $originalValues[] = $slug;
         }
       }
 
-      if (empty($originalValues)) {
-        continue;
-      }
+      if (empty($originalValues)) continue;
 
       $itemIds = ItemData::find()
         ->where(['name' => $name, 'value' => $originalValues])
@@ -423,8 +492,6 @@ class CatalogController extends Controller
         ->column();
 
       $query->andWhere(['item_id' => $itemIds]);
-
-      // Возвращаем активные фильтры в виде slug'ов — для сравнения во вьюхе
       $active[$name] = $slugs;
     }
 
@@ -432,33 +499,45 @@ class CatalogController extends Controller
   }
 
   /**
-   * Карта slug => value для всех полей категории
-   * @return array ['brand' => ['cersanit' => 'Cersanit', ...], 'size' => [...], ...]
+   * Карта slug => value для всех полей категории.
+   * Если $category = null — из всех категорий.
    */
-  private function getSlugMap($category)
+  private function getSlugMap($category = null)
   {
     $map = [];
 
-    if (empty($category->fields)) {
+    if ($category) {
+      $fields = $category->fields ?: [];
+    } else {
+      $uniqueFields = [];
+      $allCategories = Category::find()->where(['status' => Category::STATUS_ON])->all();
+      foreach ($allCategories as $cat) {
+        foreach ($cat->fields ?: [] as $field) {
+          if (!isset($uniqueFields[$field->name])) {
+            $uniqueFields[$field->name] = $field;
+          }
+        }
+      }
+      $fields = array_values($uniqueFields);
+    }
+
+    if (empty($fields)) {
       return $map;
     }
 
-    foreach ($category->fields as $field) {
-      if (empty($field->options)) {
-        continue;
-      }
+    foreach ($fields as $field) {
+      if (empty($field->options)) continue;
 
       $map[$field->name] = [];
 
       foreach ($field->options as $option) {
-        // Для color — обрезаем HEX
         $label = $option;
         if ($field->name === 'color' && strpos($option, ':') !== false) {
           $label = explode(':', $option, 2)[0];
         }
 
         $slug = Translit::slug($label);
-        $map[$field->name][$slug] = $option; // храним ОРИГИНАЛ для запроса
+        $map[$field->name][$slug] = $option;
       }
     }
 
@@ -467,30 +546,28 @@ class CatalogController extends Controller
 
   /**
    * Считает количество товаров для каждого значения фильтра.
-   * Учитывает все активные фильтры, КРОМЕ текущего поля.
-   * @return array ['color' => ['belyj' => 12, 'seryj' => 23, ...], ...]
    */
   private function getFilterCounts($category, $activeFilters)
   {
     $counts = [];
     $filterNames = ['brand', 'color', 'purpose', 'size', 'surface'];
+    $slugMap = $this->getSlugMap($category);
 
     foreach ($filterNames as $fieldName) {
-      // Собираем "другие" фильтры — все, кроме текущего
       $otherFilters = $activeFilters;
       unset($otherFilters[$fieldName]);
 
-      // Строим подзапрос: item_id товаров, соответствующих другим фильтрам
       $itemQuery = Item::find()
-        ->where(['category_id' => $category->category_id])
-        ->andWhere(['status' => Item::STATUS_ON])
+        ->where(['status' => Item::STATUS_ON])
         ->select(['item_id']);
 
-      // Применяем фильтры по другим полям
+      if ($category) {
+        $itemQuery->andWhere(['category_id' => $category->category_id]);
+      }
+
       foreach ($otherFilters as $name => $values) {
         if (empty($values)) continue;
 
-        // Цена
         if ($name === 'price_from') {
           $itemQuery->andWhere(['>=', 'price', (float)$values]);
           continue;
@@ -499,7 +576,6 @@ class CatalogController extends Controller
           $itemQuery->andWhere(['<=', 'price', (float)$values]);
           continue;
         }
-        // Хит
         if ($name === 'is_hit') {
           $itemIds = ItemData::find()
             ->where(['name' => 'ishit', 'value' => '1'])
@@ -508,15 +584,10 @@ class CatalogController extends Controller
           $itemQuery->andWhere(['item_id' => $itemIds]);
           continue;
         }
-        // Обычные фильтры
-        $slugMap = $this->getSlugMap($category);
+
         $originalValues = [];
         foreach ((array)$values as $slug) {
-          if (isset($slugMap[$name][$slug])) {
-            $originalValues[] = $slugMap[$name][$slug];
-          } else {
-            $originalValues[] = $slug;
-          }
+          $originalValues[] = $slugMap[$name][$slug] ?? $slug;
         }
         if (!empty($originalValues)) {
           $itemIds = ItemData::find()
@@ -529,7 +600,6 @@ class CatalogController extends Controller
 
       $matchingItemIds = $itemQuery->column();
 
-      // Считаем значения для текущего поля
       if (empty($matchingItemIds)) {
         $counts[$fieldName] = [];
         continue;

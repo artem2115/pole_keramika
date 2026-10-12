@@ -1,4 +1,5 @@
 <?php
+//app/views/catalog/_active_filters.php
 /**
  * @var array $filterValues
  * @var array $activeFilters
