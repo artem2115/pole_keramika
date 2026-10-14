@@ -767,4 +767,21 @@ $(function(){
       }
     });
   });
+
+
+  $(document).on(word_click, '.checkout-delivery button', function(){
+    const $btn = $(this);
+    const key = $btn.data('delivery');
+    const $block = $btn.closest('.checkout-block');
+
+    $block.find('.checkout-delivery button').removeClass(word_active);
+    $btn.addClass(word_active);
+
+    $block.find('.checkout-delivery-fields .f1').each(function(){
+      const $field = $(this);
+      const isActive = $field.data('delivery-field') === key;
+      $field.toggleClass(word_active, isActive);
+      $field.find('input, select').prop('disabled', !isActive);
+    });
+  });
 });
