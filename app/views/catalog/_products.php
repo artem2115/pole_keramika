@@ -69,7 +69,7 @@ use app\widgets\CategoryPager;
               <?php endif; ?>
             </div>
           </div>
-          <button>В корзину</button>
+          <button type="button" class="add-to-cart" data-item-id="<?= $item->item_id ?>">В корзину</button>
         </div>
       <?php endforeach; ?>
     </div>

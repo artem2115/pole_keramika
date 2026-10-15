@@ -255,6 +255,51 @@ input{color:$colorGray900}
     svg{width:19px;height:18px;position:relative;top:2px;margin-left:8px}
   }
 }
+
+.cart1 .cart-count {font-weight: 500;}
+.cart1.has-items .cart-count {color: $colorBrand500;}
+
+// Уведомления корзины
+#basket-notifications, #basket-notifications-global {
+  position: fixed;top: 80px;right: 20px;z-index: 9999;display: flex;flex-direction: column;gap: 8px;max-width: 360px;
+}
+.basket-notice {
+  padding: 12px 16px;border-radius: 4px;box-shadow: 0 4px 12px rgba(0,0,0,0.15);font-size: rem(14px);line-height: 1.4;background: $colorWhite;
+
+  &-success {background: #E7F5EC;color: $colorSuccess700;border-left: 3px solid $colorSuccess700;}
+  &-warning {background: #FFF4E5;color: #A15C00;border-left: 3px solid #E09200;}
+  &-info {background: #EAF2FB;color: #1A5490;border-left: 3px solid #3B82C4;}
+  &-error {background: #FDE8E8;color: $colorError400;border-left: 3px solid $colorError400;}
+}
+
+.add-to-cart.in-basket {
+  background-color: $colorGray100;
+  color: $colorGray500;
+  cursor: default;
+
+  &:hover {
+    background-color: $colorGray100;
+    color: $colorGray500;
+  }
+}
+
+.order-agree-msg {
+  display: none;
+  color: $colorError400;
+  font-size: rem(13px);
+  margin-top: 5px;
+
+  &.active {
+    display: block;
+  }
+}
+
+.order-agree.agree-error {
+  input[type="checkbox"] + var {
+    border-color: $colorError400;
+  }
+}
+
 @keyframes hbScroll{
   0%{transform: translateX(0);}
   40%{transform: translateX(-15px);}

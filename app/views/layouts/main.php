@@ -16,8 +16,8 @@ $isHome = Yii::$app->controller->id === Yii::$app->defaultRoute && Yii::$app->co
       <div class="htc">
         <nav>
           <ul>
-            <li><a href="#">Каталог</a></li>
-            <li><a href="#">Акции</a></li>
+            <li><a href="/catalog/">Каталог</a></li>
+            <li><a href="/akcii/">Акции</a></li>
             <li><a href="/completed/">Реализованные проекты</a></li>
             <li><a href="/partneram/">Партнерам</a></li>
             <li><a href="/about/">О нас</a>
@@ -37,7 +37,7 @@ $isHome = Yii::$app->controller->id === Yii::$app->defaultRoute && Yii::$app->co
             <span>+7 924 818-00-34</span></a>
         </div>
         <div class="cart1">
-          <a href="#"><span>Корзина</span> <svg><use xlink:href="#cart"></use></svg></a>
+          <a href="/basket/"><span>Корзина</span> <svg><use xlink:href="#cart"></use></svg></a>
         </div>
         <button data-modal="order_call">заказать звонок</button>
       </div>

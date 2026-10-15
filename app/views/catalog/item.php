@@ -111,7 +111,7 @@ $itemUnit = $itemData[$item->item_id]['unit'][0] ?? $item->getDataValue('unit');
         <div class="sale3">
           <?= number_format($item->price, 0, '.', ' ') ?> ₽<?= $itemUnit ? '/' . $itemUnit : '' ?>
         </div>
-        <button class="btn1-b1">В корзину</button>
+        <button type="button" class="btn1-b1 add-to-cart" data-item-id="<?= $item->item_id ?>">В корзину</button>
         <button class="btn1-b2">Помощь в подборе</button>
       </div>
       <div class="b11">
