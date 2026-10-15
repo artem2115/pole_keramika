@@ -17,6 +17,20 @@ class Collection extends \yii\easyii\components\ActiveRecord
 
   public $formatsArray = [];
 
+  /**
+   * Доступные стили коллекций
+   */
+  public static $styles = [
+    'classic' => 'Классика',
+    'loft' => 'Лофт',
+    'modern' => 'Модерн',
+    'provence' => 'Прованс',
+    'scandi' => 'Скандинавский',
+    'contemporary' => 'Современный',
+    'eco' => 'Экостиль',
+    'minimalism' => 'Минимализм',
+  ];
+
   public static function tableName()
   {
     return '{{%catalog_collections}}';
@@ -29,6 +43,8 @@ class Collection extends \yii\easyii\components\ActiveRecord
       [['title', 'short'], 'trim'],
       ['title', 'string', 'max' => 255],
       ['short', 'string', 'max' => 1024],
+      ['style', 'string', 'max' => 64],
+      ['style', 'in', 'range' => array_keys(self::$styles)],
       ['category_id', 'integer'],
       ['image', 'image'],
       [['description'], 'safe'],
@@ -49,6 +65,7 @@ class Collection extends \yii\easyii\components\ActiveRecord
       'image' => Yii::t('easyii', 'Image'),
       'description' => 'Описание',
       'formats' => 'Форматы плитки',
+      'style' => 'Стиль',
       'formatsArray' => 'Форматы плитки',
       'slug' => Yii::t('easyii', 'Slug'),
       'time' => Yii::t('easyii', 'Date'),

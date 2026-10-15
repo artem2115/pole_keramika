@@ -3,6 +3,7 @@
 use yii\easyii\helpers\Image;
 use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\easyii\modules\collections\models\Collection;
 
 /**
 * @var yii\web\View $this
@@ -69,6 +70,10 @@ $this->title = $collection->seo('title', $collection->title);
             <li><?= Html::encode($format) ?></li>
           <?php endforeach; ?>
         </ul>
+      <?php endif; ?>
+      <?php if ($collection->style && isset(Collection::$styles[$collection->style])): ?>
+        <div class="h5">Стиль</div>
+        <p><?= Html::encode(Collection::$styles[$collection->style]) ?></p>
       <?php endif; ?>
       <?php if ($collection->description): ?>
         <div class="h5">О коллекции</div>

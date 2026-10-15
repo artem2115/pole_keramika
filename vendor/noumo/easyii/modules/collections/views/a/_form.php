@@ -48,7 +48,10 @@ $categoriesList = \yii\helpers\ArrayHelper::map($categories, 'category_id', 'tit
     'plugins' => ['fullscreen']
   ]
 ]) ?>
-
+<?= $form->field($model, 'style')->dropDownList(
+  \yii\easyii\modules\collections\models\Collection::$styles,
+  ['prompt' => '— выберите стиль —']
+) ?>
 <? //= $form->field($model, 'formats')->widget(TagsInput::class, [
   //'options' => ['placeholder' => 'Введите формат и нажмите Enter (например: 25x40)']
 //])->hint('Введите форматы плитки, каждый через Enter') ?>
