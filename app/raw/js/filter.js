@@ -310,8 +310,8 @@
     }
 
     // ============================================================
-    // Вкладка "Коллекции" — фильтр по бренду с перезагрузкой
-    // ============================================================
+// Вкладка "Коллекции" — фильтр по бренду с перезагрузкой
+// ============================================================
     if ($sidebar.find('input[name="brand[]"]').length) {
       $(document).on('change', 'input[name="brand[]"]', function() {
         // На вкладке "Товары" работает AJAX — редирект не нужен
@@ -323,8 +323,38 @@
           slugs.push(this.value);
         });
 
-        var queryString = slugs.length ? 'brand=' + slugs.join(',') : '';
-        window.location.href = window.location.pathname + (queryString ? '?' + queryString : '');
+        var url = new URL(window.location.href);
+
+        if (slugs.length) {
+          url.searchParams.set('brand', slugs.join(','));
+        } else {
+          url.searchParams.delete('brand');
+        }
+
+        window.location.href = url.toString();
+      });
+    }
+
+    // ============================================================
+    // Фильтр по стилю на странице коллекций
+    // ============================================================
+    if ($sidebar.find('input[name="style"]').length) {
+      $(document).on('change', 'input[name="style"]', function() {
+        var selected = [];
+
+        $sidebar.find('input[name="style"]:checked').each(function() {
+          selected.push(this.value);
+        });
+
+        var url = new URL(window.location.href);
+
+        if (selected.length) {
+          url.searchParams.set('style', selected.join(','));
+        } else {
+          url.searchParams.delete('style');
+        }
+
+        window.location.href = url.toString();
       });
     }
 

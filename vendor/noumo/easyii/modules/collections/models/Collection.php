@@ -227,4 +227,13 @@ class Collection extends \yii\easyii\components\ActiveRecord
   {
     return !empty($this->seo->{$attribute}) ? $this->seo->{$attribute} : $default;
   }
+
+  /**
+   * Название стиля по slug
+   * @return string
+   */
+  public function getStyleLabel()
+  {
+    return self::$styles[$this->style] ?? '';
+  }
 }

@@ -5,6 +5,11 @@
  * @var \yii\easyii\modules\collections\models\Collection[] $collections
  * @var array $collectionPrices
  * @var \yii\easyii\modules\catalog\models\Category[] $allCategories
+ * @var array $stylesMap
+ * @var array $activeStyle
+ * @var int $visibleLimit
+ * @var array|null $brandsMap
+ * @var array|null $activeBrand
  */
 
 use yii\easyii\helpers\Image;
@@ -14,6 +19,11 @@ use yii\helpers\Url;
 $this->title = $category
   ? $category->seo('title', $category->title . ' — коллекции')
   : 'Коллекции';
+
+// Значения по умолчанию
+$stylesMap = $stylesMap ?? [];
+$activeStyle = $activeStyle ?? [];
+$visibleLimit = $visibleLimit ?? 7;
 ?>
 
 <div class="b7">
@@ -36,11 +46,15 @@ $this->title = $category
 <div class="bc">
   <ul>
     <li><a href="/">Главная</a></li>
-    <li><a href="<?= Url::to(['/catalog']) ?>">Каталог</a></li>
+    <li>
+      <?php if ($category): ?>
+        <a href="<?= Url::to(['/collections']) ?>">Коллекции</a>
+      <?php else: ?>
+        Коллекции
+      <?php endif; ?>
+    </li>
     <?php if ($category): ?>
       <li><?= Html::encode($category->title) ?></li>
-    <?php else: ?>
-      <li>Коллекции</li>
     <?php endif; ?>
   </ul>
 </div>
@@ -57,6 +71,18 @@ $this->title = $category
         'category' => $category,
         'allCategories' => $allCategories,
         'view' => 'kollekcii',
+      ]) ?>
+
+      <?= $this->render('_sidebar_brands', [
+        'brandsMap' => $brandsMap ?? [],
+        'activeBrand' => $activeBrand ?? [],
+        'visibleLimit' => $visibleLimit,
+      ]) ?>
+
+      <?= $this->render('_sidebar_styles', [
+        'stylesMap' => $stylesMap,
+        'activeStyle' => $activeStyle,
+        'visibleLimit' => $visibleLimit,
       ]) ?>
     </div>
   </aside>
@@ -95,6 +121,9 @@ $this->title = $category
                   <h4 class="p1-ttl">
                     <a href="<?= $colUrl ?>"><?= Html::encode($col->title) ?></a>
                   </h4>
+                  <?php if ($col->getStyleLabel()): ?>
+                    <div class="p1-style"><?= Html::encode($col->getStyleLabel()) ?></div>
+                  <?php endif; ?>
                   <?php if (!empty($collectionPrices[$col->collection_id])): ?>
                     <div class="sale2">
                       от <?= number_format($collectionPrices[$col->collection_id], 0, '.', ' ') ?> <span>₽</span>

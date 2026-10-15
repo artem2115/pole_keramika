@@ -18,20 +18,20 @@ $hasGallery = count($images) > 1;
 
 $this->title = $collection->seo('title', $collection->title);
 ?>
-<div class="bc">
-  <ul>
-    <li><a href="/">Главная</a></li>
-    <li><a href="<?= Url::to(['/catalog']) ?>">Каталог</a></li>
-    <?php if ($collection->category): ?>
-      <li>
-        <a href="<?= Url::to(['/catalog/' . $collection->category->slug]) ?>">
-          <?= Html::encode($collection->category->title) ?>
-        </a>
-      </li>
-    <?php endif; ?>
-    <li><?= Html::encode($collection->title) ?></li>
-  </ul>
-</div>
+  <div class="bc">
+    <ul>
+      <li><a href="/">Главная</a></li>
+      <li><a href="<?= Url::to(['/collections']) ?>">Коллекции</a></li>
+      <?php if ($collection->category): ?>
+        <li>
+          <a href="<?= Url::to(['/collections/' . $collection->category->slug]) ?>">
+            <?= Html::encode($collection->category->title) ?>
+          </a>
+        </li>
+      <?php endif; ?>
+      <li><?= Html::encode($collection->title) ?></li>
+    </ul>
+  </div>
 <h1><?= $collection->seo('h1', $collection->title) ?></h1>
 <div class="b8 b8-2">
   <?php if (!empty($images)): ?>
