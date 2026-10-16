@@ -614,17 +614,25 @@ input{color:$colorGray900}
   }
 }
 
-.tabs2{font-weight:$fwMedium-500;margin-top:10px;//todo: проверить
+.tabs2{font-weight:$fwMedium-500;margin-top:10px;
   li{@extend %transition-02;display:inline-block;background-color:$colorGray25;border-radius:100px;margin:5px 5px 5px 0;cursor:pointer;overflow:hidden;padding:16px 24px;
     &:hover{background-color:$colorGray50}
-    a{display:inline-block;padding:16px 24px;background-color:$colorGray25;text-decoration:none;color:$colorGray900;
-      &:hover{background-color:$colorGray50}
-    }
     &.active{background-color:$colorGray100;}
-
+    a{text-decoration:none;color:$colorGray900;display:inline-block;}
   }
   &.tabs2-2{
     li{padding:12px 16px}
+  }
+  /* ссылочный вариант: пилюля — это <a>, а <li> — просто обёртка */
+  &.tabs2-link{
+    li{background-color:transparent;padding:0;overflow:visible;
+      &:hover{background-color:transparent;}
+      &.active{background-color:transparent;}
+      a{@extend %transition-02;display:inline-block;background-color:$colorGray25;border-radius:100px;padding:16px 24px;
+        &:hover{background-color:$colorGray50;}
+      }
+      &.active a{background-color:$colorGray100;}
+    }
   }
 }
 

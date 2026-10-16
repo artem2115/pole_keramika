@@ -15,6 +15,22 @@ use yii\easyii\modules\collections\models\Collection;
 class CatalogController extends Controller
 {
   /**
+   * Типы полей, которые могут участвовать в фильтрах
+   */
+  private const FILTER_FIELD_TYPES = ['checkbox', 'select'];
+
+  /**
+   * Поля-исключения — не участвуют в фильтрах,
+   * даже если у них тип из FILTER_FIELD_TYPES
+   */
+  private const NON_FILTER_FIELDS = [
+    'article',
+    'unit',
+    'thickness',
+    'pcsinpack',
+  ];
+
+  /**
    * Главная каталога — все товары всех категорий
    */
   public function actionIndex($page = null)
@@ -185,7 +201,6 @@ class CatalogController extends Controller
       throw new NotFoundHttpException('Товар не найден');
     }
 
-    // Редирект на новый URL коллекции
     if ($item->collection_id && $item->collection) {
       return $this->redirect([
         '/collections/'
@@ -205,6 +220,11 @@ class CatalogController extends Controller
       'itemData' => [],
     ]);
   }
+
+  // ============================================================
+  // Приватные хелперы
+  // ============================================================
+
   /**
    * Найти категорию по slug или 404
    */
@@ -218,30 +238,62 @@ class CatalogController extends Controller
   }
 
   /**
-   * Собрать значения для фильтров из ItemData
+   * Получить поля, которые участвуют в фильтрах.
    * @param Category|null $category
+   * @return array — массив объектов field
+   */
+  private function getFilterFields($category = null)
+  {
+    $fields = $this->getAllFields($category);
+    $result = [];
+
+    foreach ($fields as $field) {
+      // Только checkbox и select
+      if (!in_array($field->type, self::FILTER_FIELD_TYPES, true)) {
+        continue;
+      }
+      // Пропускаем исключения
+      if (in_array($field->name, self::NON_FILTER_FIELDS, true)) {
+        continue;
+      }
+      $result[] = $field;
+    }
+
+    return $result;
+  }
+
+  /**
+   * Получить все поля категории (или всех категорий)
+   * @param Category|null $category
+   * @return array
+   */
+  private function getAllFields($category = null)
+  {
+    if ($category) {
+      return $category->fields ?: [];
+    }
+
+    // Все поля всех категорий — уникальные по имени
+    $uniqueFields = [];
+    $allCategories = Category::find()->where(['status' => Category::STATUS_ON])->all();
+    foreach ($allCategories as $cat) {
+      foreach ($cat->fields ?: [] as $field) {
+        if (!isset($uniqueFields[$field->name])) {
+          $uniqueFields[$field->name] = $field;
+        }
+      }
+    }
+    return array_values($uniqueFields);
+  }
+
+  /**
+   * Собрать значения для фильтров из ItemData
    */
   private function getFilterValues($category = null)
   {
     $filters = [];
 
-    // Собираем поля
-    if ($category) {
-      $fields = $category->fields ?: [];
-    } else {
-      // Все поля всех категорий — уникальные по имени
-      $uniqueFields = [];
-      $allCategories = Category::find()->where(['status' => Category::STATUS_ON])->all();
-      foreach ($allCategories as $cat) {
-        foreach ($cat->fields ?: [] as $field) {
-          if (!isset($uniqueFields[$field->name])) {
-            $uniqueFields[$field->name] = $field;
-          }
-        }
-      }
-      $fields = array_values($uniqueFields);
-    }
-
+    $fields = $this->getFilterFields($category);
     if (empty($fields)) {
       return $filters;
     }
@@ -275,13 +327,7 @@ class CatalogController extends Controller
       $valuesMap[$row['name']][] = $row['value'];
     }
 
-    $filterFields = ['brand', 'color', 'purpose', 'size', 'surface'];
-
     foreach ($fields as $field) {
-      if (!in_array($field->name, $filterFields)) {
-        continue;
-      }
-
       $values = $valuesMap[$field->name] ?? [];
       if (empty($values)) {
         continue;
@@ -347,9 +393,9 @@ class CatalogController extends Controller
       $active['is_hit'] = 1;
     }
 
-    // Фильтры по ItemData
-    $filterNames = ['brand', 'color', 'purpose', 'size', 'surface'];
-    foreach ($filterNames as $name) {
+    // Фильтры по полям (динамически)
+    foreach ($this->getFilterFields($category) as $field) {
+      $name = $field->name;
       $raw = Yii::$app->request->get($name, '');
 
       if (is_array($raw)) {
@@ -385,33 +431,13 @@ class CatalogController extends Controller
   }
 
   /**
-   * Карта slug => value для всех полей категории.
-   * Если $category = null — из всех категорий.
+   * Карта slug => value для всех фильтруемых полей категории.
    */
   private function getSlugMap($category = null)
   {
     $map = [];
 
-    if ($category) {
-      $fields = $category->fields ?: [];
-    } else {
-      $uniqueFields = [];
-      $allCategories = Category::find()->where(['status' => Category::STATUS_ON])->all();
-      foreach ($allCategories as $cat) {
-        foreach ($cat->fields ?: [] as $field) {
-          if (!isset($uniqueFields[$field->name])) {
-            $uniqueFields[$field->name] = $field;
-          }
-        }
-      }
-      $fields = array_values($uniqueFields);
-    }
-
-    if (empty($fields)) {
-      return $map;
-    }
-
-    foreach ($fields as $field) {
+    foreach ($this->getFilterFields($category) as $field) {
       if (empty($field->options)) continue;
 
       $map[$field->name] = [];
@@ -436,10 +462,12 @@ class CatalogController extends Controller
   private function getFilterCounts($category, $activeFilters)
   {
     $counts = [];
-    $filterNames = ['brand', 'color', 'purpose', 'size', 'surface'];
     $slugMap = $this->getSlugMap($category);
+    $filterFields = $this->getFilterFields($category);
 
-    foreach ($filterNames as $fieldName) {
+    foreach ($filterFields as $field) {
+      $fieldName = $field->name;
+
       $otherFilters = $activeFilters;
       unset($otherFilters[$fieldName]);
 

@@ -16,7 +16,7 @@ $this->title = $page->seo('title', 'Реализованные проекты');
 <h1><?= $this->title ?></h1>
 <h2 class="h2-1">Узор и фактура</h2>
 <?php if (!empty($tags)): ?>
-  <ul class="tabs2">
+  <ul class="tabs2 tabs2-link">
     <li class="<?= !$activeTag ? 'active' : '' ?>"><a href="<?= Url::to(['/completed']) ?>">Все</a></li>
     <?php foreach ($tags as $tag): ?>
       <li class="<?= $activeTag === $tag->slug ? 'active' : '' ?>">
