@@ -124,6 +124,21 @@ $this->title = 'Корзина';
           </div>
         </div>
 
+        <div class="order-promo">
+          <label class="control-label" for="promo">Промокод</label>
+          <div class="order-promo-row">
+            <input type="text" id="promo" name="promo" placeholder="Введите код">
+            <button type="button" class="order-promo-btn">Применить</button>
+          </div>
+          <p class="order-promo-msg order-promo-msg-error"></p>
+          <p class="order-promo-msg order-promo-msg-ok"></p>
+        </div>
+
+        <div class="order-row order-row-discount" style="display:none">
+          <span>Скидка по промокоду</span>
+          <span>−0 ₽</span>
+        </div>
+
         <div class="order-agree">
           <label class="w_check">
             <input type="checkbox" name="agree" id="basket-agree">

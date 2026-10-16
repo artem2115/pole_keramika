@@ -25,7 +25,11 @@
 
     setRaw: function(items) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ items: items }));
+        var currentPromo = this.getPromo();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          items: items,
+          promo: currentPromo
+        }));
         $(document).trigger('basket:changed');
       } catch (e) {
         console.error('Basket: ошибка записи localStorage', e);
@@ -77,11 +81,45 @@
     },
 
     clear: function() {
-      this.setRaw([]);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ items: [], promo: '' }));
+        $(document).trigger('basket:changed');
+      } catch (e) {
+        console.error('Basket: ошибка очистки', e);
+      }
     },
 
     getCount: function() {
       return this.getRaw().length;
+    },
+
+    // Промокод
+    getPromo: function() {
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return '';
+        var data = JSON.parse(raw);
+        return data.promo || '';
+      } catch (e) {
+        return '';
+      }
+    },
+
+    setPromo: function(code) {
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        var data = raw ? JSON.parse(raw) : {};
+        if (!data.items) data.items = [];
+        data.promo = code || '';
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        $(document).trigger('basket:changed');
+      } catch (e) {
+        console.error('Basket: ошибка записи промокода', e);
+      }
+    },
+
+    clearPromo: function() {
+      this.setPromo('');
     },
 
     applyServerResponse: function(response) {
@@ -115,7 +153,11 @@
           removed: [],
           changed_prices: [],
           total: 0,
-          count: 0
+          count: 0,
+          discount: 0,
+          total_with_discount: 0,
+          promo_applied: null,
+          promo_error: null
         });
       }
       updateCounter(0);
@@ -134,6 +176,7 @@
       dataType: 'json',
       data: {
         items: raw,
+        promo: Basket.getPromo(),
         _csrf: $('meta[name="csrf-token"]').attr('content')
       },
       success: function(response) {
@@ -145,6 +188,11 @@
           }
           if (response.changed_prices && response.changed_prices.length) {
             showNotification('Цены на некоторые товары изменились', 'info');
+          }
+
+          if (response.promo_error && Basket.getPromo()) {
+            Basket.clearPromo();
+            showNotification(response.promo_error, 'warning');
           }
 
           updateCounter(response.count);
@@ -199,13 +247,8 @@
       $link.append($counter);
     }
 
-    if (count > 0) {
-      $counter.text(' (' + count + ')');
-      $cart.addClass('has-items');
-    } else {
-      $counter.text('');
-      $cart.removeClass('has-items');
-    }
+    $counter.text(count > 0 ? count : '0');
+    $cart.toggleClass('has-items', count > 0);
   }
 
   // ============================================================
@@ -295,7 +338,15 @@
     $('#basket-count-text').text(items.length + ' ' + pluralize(items.length, 'товар', 'товара', 'товаров'));
     $('#order-count').text(items.length);
     $('#order-subtotal').text(formatPrice(response.total) + ' ₽');
-    $('#order-total').text(formatPrice(response.total) + ' ₽');
+
+    // Промокод
+    renderPromo(response);
+
+    // Итоговая сумма
+    var finalTotal = response.total_with_discount !== undefined
+      ? response.total_with_discount
+      : response.total;
+    $('#order-total').text(formatPrice(finalTotal) + ' ₽');
   }
 
   function renderBasketItem(item) {
@@ -336,6 +387,32 @@
     ');
 
     return $li;
+  }
+
+  // Отрисовка состояния промокода
+  function renderPromo(response) {
+    var $discountRow = $('.order-row-discount');
+    var $promoInput = $('#promo');
+    var $promoBtn = $('.order-promo-btn');
+    var $promoMsgOk = $('.order-promo-msg-ok');
+    var $promoMsgError = $('.order-promo-msg-error');
+    var $order = $('#basket-order');
+
+    if (response.promo_applied) {
+      // Промокод применён
+      $discountRow.show().find('span:last').text('−' + formatPrice(response.discount) + ' ₽');
+      $promoMsgOk.text(response.promo_applied).show();
+      $promoMsgError.hide();
+      $promoInput.val(response.promo_code || Basket.getPromo());
+      $promoBtn.text('Убрать');
+      $order.addClass('promo-applied').removeClass('promo-error');
+    } else {
+      $discountRow.hide();
+      $promoMsgOk.hide();
+      $promoMsgError.hide();
+      $promoBtn.text('Применить');
+      $order.removeClass('promo-applied promo-error');
+    }
   }
 
   // ============================================================
@@ -384,7 +461,6 @@
     var itemId = parseInt($btn.data('item-id'), 10);
     if (!itemId) return;
 
-    // Уже в корзине → переход в корзину
     if (Basket.has(itemId)) {
       window.location.href = '/basket/';
       return;
@@ -393,7 +469,6 @@
     if (Basket.add(itemId, 1)) {
       showNotification('Товар добавлен в корзину', 'success');
 
-      // Меняем кнопку сразу
       $btn
         .addClass('in-basket')
         .data('original-text', $btn.text())
@@ -469,25 +544,63 @@
   });
 
   // ============================================================
-// Переключатель Доставка / Самовывоз
-// ============================================================
+  // Промокод
+  // ============================================================
+
+  $(document).on('click', '.order-promo-btn', function(e) {
+    e.preventDefault();
+
+    var currentPromo = Basket.getPromo();
+
+    // Если промокод уже применён — "Убрать"
+    if (currentPromo) {
+      Basket.clearPromo();
+      syncBasket(function(response) {
+        renderBasket(response);
+        showNotification('Промокод снят', 'info');
+      });
+      return;
+    }
+
+    // Применяем новый
+    var code = $.trim($('#promo').val());
+    if (!code) {
+      $('.order-promo-msg-error').text('Введите промокод').show();
+      return;
+    }
+
+    Basket.setPromo(code);
+    syncBasket(function(response) {
+      if (response.promo_error) {
+        $('.order-promo-msg-error').text(response.promo_error).show();
+        $('.order-promo-msg-ok').hide();
+        $('#basket-order').addClass('promo-error').removeClass('promo-applied');
+        Basket.clearPromo();
+      } else if (response.promo_applied) {
+        showNotification(response.promo_applied, 'success');
+      }
+      renderBasket(response);
+    });
+  });
+
+  // ============================================================
+  // Переключатель Доставка / Самовывоз
+  // ============================================================
 
   $(document).on('click', '#basket-delivery-switch button', function() {
     var $btn = $(this);
     var mode = $btn.data('delivery');
 
-    // Активная кнопка
     $('#basket-delivery-switch button').removeClass('active');
     $btn.addClass('active');
 
-    // Активное поле
     $('[data-delivery-field]').removeClass('active');
     $('[data-delivery-field="' + mode + '"]').addClass('active');
   });
 
-// ============================================================
-// Отправка заявки
-// ============================================================
+  // ============================================================
+  // Отправка заявки
+  // ============================================================
 
   $(document).on('click', '#basket-submit', function(e) {
     e.preventDefault();
@@ -520,7 +633,6 @@
       return;
     }
 
-// Полнота номера: минимум 11 цифр (для РФ: 7 + 10)
     var phoneDigits = phone.replace(/\D/g, '');
     if (phoneDigits.length < 11) {
       showNotification('Введите телефон полностью', 'error');
@@ -549,6 +661,7 @@
       dataType: 'json',
       data: {
         items: rawItems,
+        promo: Basket.getPromo(),
         name: name,
         phone: phone,
         email: email,
@@ -561,12 +674,9 @@
       },
       success: function(response) {
         if (response && response.success) {
-          // Очищаем корзину
           Basket.clear();
           updateCounter(0);
           refreshCartButtons();
-
-          // Показываем успех
           showState('success');
         } else {
           var msg = (response && response.message) ? response.message : 'Ошибка отправки';
@@ -619,7 +729,8 @@
   $(function() {
     updateCounter();
     refreshCartButtons();
-// Маска на телефон
+
+    // Маска на телефон
     if ($.fn.inputmask) {
       $('#co-phone').inputmask('+7 (999) 999 99 99', {
         placeholder: '+7 (___) ___ __ __',
@@ -627,6 +738,7 @@
         clearIncomplete: false
       });
     }
+
     if ($('#basket-full').length) {
       syncBasket(function(response) {
         renderBasket(response);

@@ -38,18 +38,20 @@ class BasketController extends Controller
       return ['success' => false, 'error' => 'Invalid items'];
     }
 
-    $data = Basket::enrich($rawItems);
+    $promoCode = Yii::$app->request->post('promo', '');
 
-    return [
+    $data = Basket::enrich($rawItems);
+    $promoResult = Basket::applyPromo($data, $promoCode);
+
+    return array_merge([
       'success' => true,
       'items' => $data['items'],
       'removed' => $data['removed'],
       'changed_prices' => $data['changed_prices'],
       'total' => $data['total'],
       'count' => $data['count'],
-    ];
+    ], $promoResult);
   }
-
   /**
    * Отправка заявки
    */
@@ -69,6 +71,9 @@ class BasketController extends Controller
 
     // Обогащаем
     $enriched = Basket::enrich($rawItems);
+    // Промокод
+    $promoCode = Yii::$app->request->post('promo', '');
+    $promoResult = Basket::applyPromo($enriched, $promoCode);
     if (empty($enriched['items'])) {
       return ['success' => false, 'message' => 'Товары больше не доступны'];
     }
@@ -113,18 +118,26 @@ class BasketController extends Controller
       'type' => $deliveryType,
       'address' => $address,
       'pickup' => $pickup,
-    ]);
+    ], $promoResult);
 
-    // Сохраняем в Feedback
     $feedback = new Feedback();
     $feedback->name = $name;
     $feedback->phone = $phone;
     $feedback->email = $email;
     $feedback->title = 'Заявка из корзины';
     $feedback->text = $text;
+    $feedback->promo = $promoResult['promo_code'];
 
     if (!$feedback->save(false)) {
       return ['success' => false, 'message' => 'Ошибка сохранения заявки'];
+    }
+
+// Увеличить счётчик использования промокода
+    if ($promoResult['promo_code']) {
+      $promo = \yii\easyii\modules\promo\models\Promo::findByCode($promoResult['promo_code']);
+      if ($promo) {
+        $promo->incrementUsage();
+      }
     }
 
     return [

@@ -123,7 +123,7 @@ class Basket
    * @param array $delivery — ['type' => 'delivery'|'pickup', 'address', 'pickup']
    * @return string
    */
-  public static function buildFeedbackText($enrichedItems, $contacts, $delivery)
+  public static function buildFeedbackText($enrichedItems, $contacts, $delivery, $promoResult = [])
   {
     $lines = [];
     $lines[] = 'Заявка из корзины';
@@ -167,6 +167,68 @@ class Basket
       }
     }
 
+    // Промокод
+    if (!empty($promoResult['promo_code'])) {
+      $lines[] = '';
+      $lines[] = 'Промокод: ' . $promoResult['promo_code'] . ' (−' . number_format($promoResult['discount'], 0, '.', ' ') . ' ₽)';
+      $lines[] = 'Итого со скидкой: ' . number_format($promoResult['total_with_discount'], 0, '.', ' ') . ' ₽';
+    }
+
     return implode("\n", $lines);
+  }
+
+  /**
+   * Применить промокод к обогащённой корзине.
+   * Возвращает: [discount, total_with_discount, promo_applied, promo_error, promo_code]
+   *
+   * @param array $enriched — результат enrich()
+   * @param string|null $promoCode
+   * @return array
+   */
+  public static function applyPromo(array $enriched, ?string $promoCode): array
+  {
+    $total = (float)$enriched['total'];
+
+    if (empty($promoCode)) {
+      return [
+        'discount' => 0,
+        'total_with_discount' => $total,
+        'promo_applied' => null,
+        'promo_error' => null,
+        'promo_code' => null,
+      ];
+    }
+
+    $promo = \yii\easyii\modules\promo\models\Promo::findByCode($promoCode);
+
+    if (!$promo) {
+      return [
+        'discount' => 0,
+        'total_with_discount' => $total,
+        'promo_applied' => null,
+        'promo_error' => 'Промокод не найден',
+        'promo_code' => null,
+      ];
+    }
+
+    $result = $promo->apply($total);
+
+    if (!$result['success']) {
+      return [
+        'discount' => 0,
+        'total_with_discount' => $total,
+        'promo_applied' => null,
+        'promo_error' => $result['message'],
+        'promo_code' => null,
+      ];
+    }
+
+    return [
+      'discount' => $result['discount'],
+      'total_with_discount' => round($total - $result['discount'], 2),
+      'promo_applied' => $result['message'],
+      'promo_error' => null,
+      'promo_code' => $promo->code,
+    ];
   }
 }
